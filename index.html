@@ -467,6 +467,17 @@ function initApp(){
   });
   listenInvestments();
   listenUSD();
+
+  // Wire investment buttons here — after login so uid is set
+  document.getElementById('btnAddStock').onclick = ()=>openAddInvestment('stock');
+  document.getElementById('btnAddDolar').onclick = ()=>openAddInvestment('dolar');
+  document.getElementById('btnCloseStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
+  document.getElementById('btnCancelStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
+  document.getElementById('btnSaveStock').onclick = saveInvestment;
+  document.getElementById('btnCloseUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
+  document.getElementById('btnCancelUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
+  document.getElementById('btnConfirmUpdatePrice').onclick = confirmUpdatePrice;
+  document.getElementById('btnLoadPortfolio').onclick = loadPortfolio;
 }
 
 // ── RENDER ──
@@ -965,17 +976,18 @@ document.getElementById('usd-cash').addEventListener('click', () => {
 
 document.getElementById('btnExport').addEventListener('click', exportToExcel);
 
-// Investment buttons - use document level listener since tab may not be visible on load
-document.addEventListener('click', e => {
-  if (e.target.id === 'btnAddStock') openAddInvestment('stock');
-  if (e.target.id === 'btnAddDolar') openAddInvestment('dolar');
-  if (e.target.id === 'btnCloseStock' || e.target.id === 'btnCancelStock') document.getElementById('ov-stock').classList.remove('on');
-  if (e.target.id === 'btnSaveStock') saveInvestment();
-  if (e.target.id === 'btnCloseUpdatePrice' || e.target.id === 'btnCancelUpdatePrice') document.getElementById('ov-update-price').classList.remove('on');
-  if (e.target.id === 'btnConfirmUpdatePrice') confirmUpdatePrice();
-  if (e.target.id === 'btnAddRem1' || e.target.id === 'btnAddRem2') document.getElementById('ov-rem').classList.add('on');
-  if (e.target.id === 'btnLoadPortfolio') loadPortfolio();
-});
+// Investment buttons
+document.getElementById('btnAddStock').addEventListener('click', ()=>openAddInvestment('stock'));
+document.getElementById('btnAddDolar').addEventListener('click', ()=>openAddInvestment('dolar'));
+document.getElementById('btnCloseStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
+document.getElementById('btnCancelStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
+document.getElementById('btnSaveStock').addEventListener('click', saveInvestment);
+document.getElementById('btnCloseUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
+document.getElementById('btnCancelUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
+document.getElementById('btnConfirmUpdatePrice').addEventListener('click', confirmUpdatePrice);
+document.getElementById('btnLoadPortfolio').addEventListener('click', loadPortfolio);
+document.getElementById('btnAddRem1').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
+document.getElementById('btnAddRem2').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
 </script>
 </body>
 </html>
