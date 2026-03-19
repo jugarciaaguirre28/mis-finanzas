@@ -219,6 +219,7 @@
     <div class="topbar">
       <h1 id="viewTitle">Resumen</h1>
       <button class="btn btn-ghost" onclick="showView('add')">+ Gasto</button>
+      <button class="btn btn-primary" onclick="openImportModal()">⬆ Importar Excel</button>
     </div>
     <div class="content">
 
@@ -306,6 +307,24 @@
 </div>
 </div>
 
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-title">Importar Excel <button class="close-btn" onclick="closeModal('importModal')">×</button></div>
+    <p style="color:var(--text-muted);font-size:13.5px;margin-bottom:20px;line-height:1.6">
+      Seleccioná tu archivo <strong style="color:var(--text)">.xlsx</strong> con el formato de la hoja "Transacciones" (columnas: Fecha, Importe, Descripción, Método, Cuota desde, Cuota hasta, Categoría).
+    </p>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Archivo Excel</label>
+      <input type="file" id="xlsxFile" accept=".xlsx,.xls" style="padding:8px">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('importModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="importExcel()">Importar</button>
+    </div>
+  </div>
+</div>
+
 <!-- REMINDER MODAL -->
 <div class="modal-overlay" id="reminderModal">
   <div class="modal">
@@ -329,6 +348,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- FIREBASE -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -661,6 +681,56 @@ async function saveReminder() {
   await window._saveReminderToDb({name,amount,day,cat,recurrence,done:[]});
   closeModal('reminderModal');
   showToast('✓ Recordatorio guardado');
+}
+
+function openImportModal(){document.getElementById('importModal').classList.add('open');}
+
+async function importExcel(){
+  const file=document.getElementById('xlsxFile').files[0];
+  if(!file){showToast('Seleccioná un archivo',true);return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets['Transacciones']||wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      let headerRow=-1;
+      for(let i=0;i<rows.length;i++){
+        if(rows[i]&&rows[i].some(c=>c&&String(c).toLowerCase().includes('fecha'))){headerRow=i;break;}
+      }
+      if(headerRow<0){showToast('No se encontraron columnas de transacciones',true);return;}
+      const headers=rows[headerRow].map(h=>h?String(h).trim().toLowerCase():'');
+      const idxDate=headers.findIndex(h=>h.includes('fecha'));
+      const idxAmt=headers.findIndex(h=>h.includes('importe'));
+      const idxDesc=headers.findIndex(h=>h.includes('desc'));
+      const idxMeth=headers.findIndex(h=>h.includes('método')||h.includes('metodo'));
+      const idxCat=headers.findIndex(h=>h.includes('categ'));
+      const idxQF=headers.findIndex(h=>h.includes('desde'));
+      const idxQT=headers.findIndex(h=>h.includes('hasta'));
+      let added=0;
+      for(let i=headerRow+1;i<rows.length;i++){
+        const row=rows[i];
+        if(!row||!row[idxDate]||row[idxAmt]==null)continue;
+        const amt=parseFloat(row[idxAmt]);
+        if(isNaN(amt)||amt===0)continue;
+        let date;
+        if(row[idxDate] instanceof Date){date=row[idxDate].toISOString().slice(0,10);}
+        else{const p=new Date(row[idxDate]);if(isNaN(p))continue;date=p.toISOString().slice(0,10);}
+        const cat=String(row[idxCat]||'Otros').trim();
+        const type=INCOME_CATS.includes(cat)?'income':(amt<0?'income':'expense');
+        await window._saveTransactionToDb({
+          date, amount:Math.abs(amt),
+          desc:String(row[idxDesc]||'').trim()||'Sin descripción',
+          cat, method:String(row[idxMeth]||'Otros').trim(),
+          qFrom:parseInt(row[idxQF])||1, qTo:parseInt(row[idxQT])||1, type
+        });
+        added++;
+      }
+      closeModal('importModal');
+      showToast(`✓ Se importaron ${added} transacciones`);
+    }catch(e){showToast('Error al leer el archivo',true);}
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
