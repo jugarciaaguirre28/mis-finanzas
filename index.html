@@ -117,20 +117,20 @@ input::placeholder{color:var(--d)}
   <div class="topbar">
     <div class="logo">mis finanzas</div>
     <div class="tabs">
-      <div class="tab on" onclick="showView('dashboard',this)">📊 Resumen</div>
-      <div class="tab" onclick="showView('transactions',this)">📋 Transacciones</div>
-      <div class="tab" onclick="showView('add',this)">➕ Agregar</div>
-      <div class="tab" onclick="showView('compare',this)">📈 Comparar</div>
-      <div class="tab" onclick="showView('reminders',this)">🔔 Recordatorios</div>
+      <div class="tab on" data-view="dashboard">📊 Resumen</div>
+      <div class="tab" data-view="transactions">📋 Transacciones</div>
+      <div class="tab" data-view="add">➕ Agregar</div>
+      <div class="tab" data-view="compare">📈 Comparar</div>
+      <div class="tab" data-view="reminders">🔔 Recordatorios</div>
     </div>
     <div class="tbr">
       <div class="mnav">
-        <button onclick="chMonth(-1)">‹</button>
+        <button id="btnPrev">‹</button>
         <span id="mlbl"></span>
-        <button onclick="chMonth(1)">›</button>
+        <button id="btnNext">›</button>
       </div>
-      <button class="btn bg bsm" onclick="openOv('ov-import')">⬆ Excel</button>
-      <button class="btn bp bsm" onclick="showView('add',null)">+ Gasto</button>
+      <button class="btn bg bsm" id="btnImport">⬆ Excel</button>
+      <button class="btn bp bsm" id="btnAddGasto">+ Gasto</button>
       <img class="av" id="av" src="" title="Cerrar sesión" onclick="doLogout()">
     </div>
   </div>
@@ -149,7 +149,7 @@ input::placeholder{color:var(--d)}
       <div class="card">
         <div style="display:flex;align-items:center;margin-bottom:14px">
           <span style="font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--m);flex:1">🔔 Recordatorios del mes</span>
-          <button class="btn bg bsm" onclick="openOv('ov-rem')">+ Agregar</button>
+          <button class="btn bg bsm" id="btnAddRem1">+ Agregar</button>
         </div>
         <div id="drems"></div>
       </div>
@@ -159,9 +159,9 @@ input::placeholder{color:var(--d)}
       <div class="twrap">
         <div class="thead">
           <h3>Transacciones</h3>
-          <input class="si" id="srch" placeholder="Buscar..." oninput="renderTx()">
-          <select class="ss" id="fcat" onchange="renderTx()"><option value="">Todas las categorías</option></select>
-          <select class="ss" id="ftype" onchange="renderTx()"><option value="">Tipo</option><option value="expense">Gastos</option><option value="income">Ingresos</option></select>
+          <input class="si" id="srch" placeholder="Buscar...">
+          <select class="ss" id="fcat" ><option value="">Todas las categorías</option></select>
+          <select class="ss" id="ftype" ><option value="">Tipo</option><option value="expense">Gastos</option><option value="income">Ingresos</option></select>
         </div>
         <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Método</th><th>Cuotas</th><th style="text-align:right">Importe</th><th></th></tr></thead>
         <tbody id="txbody"></tbody></table>
@@ -172,8 +172,8 @@ input::placeholder{color:var(--d)}
       <div class="fcard">
         <div class="ftit">Nueva transacción</div>
         <div class="ttog">
-          <div class="tbtn exp" id="texp" onclick="setType('expense')">💸 Gasto</div>
-          <div class="tbtn" id="tinc" onclick="setType('income')">💰 Ingreso</div>
+          <div class="tbtn exp" id="texp">💸 Gasto</div>
+          <div class="tbtn" id="tinc">💰 Ingreso</div>
         </div>
         <div class="fgrid">
           <div class="fg"><label class="flbl">Fecha</label><input type="date" id="fdate"></div>
@@ -187,8 +187,8 @@ input::placeholder{color:var(--d)}
           <div class="fg"><label class="flbl">Cuota hasta</label><input type="number" id="fqt" value="1" min="1"></div>
         </div>
         <div class="fact">
-          <button class="btn bg" onclick="clearForm()">Limpiar</button>
-          <button class="btn bp" onclick="saveTx()">Guardar</button>
+          <button class="btn bg" id="btnClear">Limpiar</button>
+          <button class="btn bp" id="btnSave">Guardar</button>
         </div>
       </div>
     </div>
@@ -212,20 +212,20 @@ input::placeholder{color:var(--d)}
 
 <div class="ov" id="ov-import">
   <div class="modal">
-    <div class="mtit">Importar Excel <button class="xb" onclick="closeOv('ov-import')">×</button></div>
+    <div class="mtit">Importar Excel <button class="xb" id="btnCloseImport">×</button></div>
     <p style="color:var(--m);font-size:16px;margin-bottom:20px;line-height:1.6">Seleccioná tu <strong style="color:var(--t)">.xlsx</strong> con columnas: Fecha, Importe, Descripción, Método, Cuota desde, Cuota hasta, Categoría, Tipo.</p>
     <div class="fg" style="margin-bottom:20px"><label class="flbl">Archivo</label><input type="file" id="xlfile" accept=".xlsx,.xls" style="padding:10px"></div>
     <div class="fact">
-      <button class="btn bg" onclick="closeOv('ov-import')">Cancelar</button>
-      <button class="btn by bsm" onclick="loadMarzo()">⚡ Cargar Marzo 2026</button>
-      <button class="btn bp" onclick="doImport()">Importar</button>
+      <button class="btn bg" id="btnCloseImport">Cancelar</button>
+      <button class="btn by bsm" id="btnMarzo">⚡ Cargar Marzo 2026</button>
+      <button class="btn bp" id="btnDoImport">Importar</button>
     </div>
   </div>
 </div>
 
 <div class="ov" id="ov-rem">
   <div class="modal">
-    <div class="mtit">Nuevo recordatorio <button class="xb" onclick="closeOv('ov-rem')">×</button></div>
+    <div class="mtit">Nuevo recordatorio <button class="xb" id="btnCloseRem">×</button></div>
     <div class="fgrid">
       <div class="fg full"><label class="flbl">Nombre</label><input type="text" id="rname" placeholder="ej: Alquiler, Netflix"></div>
       <div class="fg"><label class="flbl">Importe ($)</label><input type="number" id="ramt" placeholder="0.00"></div>
@@ -234,8 +234,8 @@ input::placeholder{color:var(--d)}
       <div class="fg"><label class="flbl">Recurrencia</label><select id="rrec"><option value="monthly">Mensual</option><option value="once">Una vez</option></select></div>
     </div>
     <div class="fact">
-      <button class="btn bg" onclick="closeOv('ov-rem')">Cancelar</button>
-      <button class="btn bp" onclick="saveRem()">Guardar</button>
+      <button class="btn bg" id="btnCloseRem">Cancelar</button>
+      <button class="btn bp" id="btnSaveRem">Guardar</button>
     </div>
   </div>
 </div>
@@ -609,6 +609,42 @@ function toast(msg,err=false){
   t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),4000);
 }
+// ── EVENT LISTENERS ──
+document.querySelectorAll('.tab[data-view]').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    const name = tab.dataset.view;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    document.getElementById('view-'+name).classList.add('on');
+    tab.classList.add('on');
+    renderAll();
+  });
+});
+document.getElementById('btnPrev').addEventListener('click', ()=>chMonth(-1));
+document.getElementById('btnNext').addEventListener('click', ()=>chMonth(1));
+document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('ov-import').classList.add('on'));
+document.getElementById('btnAddGasto').addEventListener('click', ()=>{
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('view-add').classList.add('on');
+  document.querySelector('.tab[data-view="add"]').classList.add('on');
+});
+document.getElementById('btnAddRem1').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
+document.getElementById('btnAddRem2').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
+document.getElementById('btnClear').addEventListener('click', clearForm);
+document.getElementById('btnSave').addEventListener('click', saveTx);
+document.getElementById('texp').addEventListener('click', ()=>setType('expense'));
+document.getElementById('tinc').addEventListener('click', ()=>setType('income'));
+document.getElementById('srch').addEventListener('input', renderTx);
+document.getElementById('fcat').addEventListener('change', renderTx);
+document.getElementById('ftype').addEventListener('change', renderTx);
+document.getElementById('btnCloseImport').addEventListener('click', ()=>document.getElementById('ov-import').classList.remove('on'));
+document.getElementById('btnMarzo').addEventListener('click', loadMarzo);
+document.getElementById('btnDoImport').addEventListener('click', doImport);
+document.getElementById('btnCloseRem').addEventListener('click', ()=>document.getElementById('ov-rem').classList.remove('on'));
+document.getElementById('btnSaveRem').addEventListener('click', saveRem);
+document.getElementById('av').addEventListener('click', doLogout);
+
 </script>
 </body>
 </html>
