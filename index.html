@@ -377,7 +377,16 @@ const remPath = () => `users/${currentUser.uid}/reminders`;
 function listenData() {
   unsubTx = onValue(ref(db, txPath()), snap => {
     state.transactions = [];
-    if (snap.exists()) snap.forEach(c => state.transactions.push({ id: c.key, ...c.val() }));
+    if (snap.exists()) {
+      const val = snap.val();
+      if (Array.isArray(val)) {
+        // Firebase converted to array due to sequential keys — convert back
+        val.forEach((d, i) => { if(d) state.transactions.push({ id: String(i), ...d }); });
+      } else {
+        snap.forEach(c => state.transactions.push({ id: c.key, ...c.val() }));
+      }
+    }
+    console.log('Transactions loaded:', state.transactions.length);
     renderAll();
   });
   unsubRem = onValue(ref(db, remPath()), snap => {
