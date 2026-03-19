@@ -246,15 +246,13 @@ input::placeholder{color:var(--d)}
 
 <div class="toast" id="toast"></div>
 
-<!-- FIREBASE COMPAT (no modules needed) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, push, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-<script>
-// ── FIREBASE INIT ──
-firebase.initializeApp({
+const firebaseApp = initializeApp({
   apiKey:"AIzaSyDm0RhXIhOdq7jcTly-kT9NLfuDEkCka9o",
   authDomain:"mis-finanzas-4a8cd.firebaseapp.com",
   databaseURL:"https://mis-finanzas-4a8cd-default-rtdb.firebaseio.com",
@@ -263,8 +261,9 @@ firebase.initializeApp({
   messagingSenderId:"319493728765",
   appId:"1:319493728765:web:70ffdc619228f8b9139194"
 });
-const auth = firebase.auth();
-const db   = firebase.database();
+const auth = getAuth(firebaseApp);
+const db   = getDatabase(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
 
 // ── CONSTANTS ──
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -286,14 +285,14 @@ const remPath = () => `users/${uid}/reminders`;
 
 // ── AUTH ──
 function doLogin(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+  signInWithPopup(auth, googleProvider)
     .catch(e => toast('Error: '+e.message, true));
 }
 function doLogout(){
-  auth.signOut();
+  signOut(auth);
 }
 
-auth.onAuthStateChanged(user => {
+onAuthStateChanged(auth, user => {
   if(user){
     uid = user.uid;
     document.getElementById('login').style.display = 'none';
@@ -316,7 +315,7 @@ function initApp(){
   document.getElementById('fdate').value = new Date().toISOString().slice(0,10);
 
   // Listen transactions
-  db.ref(txPath()).on('value', snap => {
+  onValue(ref(db, txPath()), snap => {
     txs = [];
     if(snap.exists()){
       snap.forEach(c => txs.push({id:c.key, ...c.val()}));
@@ -325,7 +324,7 @@ function initApp(){
   });
 
   // Listen reminders
-  db.ref(remPath()).on('value', snap => {
+  onValue(ref(db, remPath()), snap => {
     rems = [];
     if(snap.exists()){
       snap.forEach(c => rems.push({id:c.key, ...c.val()}));
@@ -565,10 +564,13 @@ const MARZO=[
 ];
 
 function loadMarzo(){
+  // Save one by one to guarantee unique keys
   const ref = db.ref(txPath());
-  const updates = {};
-  MARZO.forEach(d => { updates[ref.push().key] = d; });
-  ref.update(updates).then(()=>{
+  let chain = Promise.resolve();
+  MARZO.forEach((d, i) => {
+    chain = chain.then(() => push(ref(db, txPath()), d));
+  });
+  chain.then(()=>{
     closeOv('ov-import');
     toast('✓ 39 transacciones de Marzo 2026 cargadas');
   }).catch(e=>toast('Error: '+e.message,true));
@@ -600,7 +602,7 @@ function doImport(){
       const iQT=h.findIndex(x=>x.includes('hasta'));
       const iT=h.findIndex(x=>x==='tipo');
       const updates={};
-      const ref=db.ref(txPath());
+      const txRef=ref(db, txPath());
       let added=0;
       for(let i=hr+1;i<rows.length;i++){
         const row=rows[i]; if(!row) continue;
@@ -613,10 +615,13 @@ function doImport(){
         else{ const p=new Date(dv); if(isNaN(p)) continue; date=p.toISOString().slice(0,10); }
         const cat=iC>=0?String(row[iC]||'Otros').trim():'Otros';
         let type; if(iT>=0&&row[iT]) type=String(row[iT]).toLowerCase().includes('ingreso')?'income':'expense'; else type=IC.includes(cat)?'income':'expense';
-        updates[ref.push().key]={date,amount:Math.abs(amt),desc:iDe>=0?String(row[iDe]||'').trim()||'Sin descripción':'Sin descripción',cat,method:iM>=0?String(row[iM]||'Otros').trim():'Transferencia / MP',qFrom:iQF>=0?parseInt(row[iQF])||1:1,qTo:iQT>=0?parseInt(row[iQT])||1:1,type};
+        updates[push(txRef).key]={date,amount:Math.abs(amt),desc:iDe>=0?String(row[iDe]||'').trim()||'Sin descripción':'Sin descripción',cat,method:iM>=0?String(row[iM]||'Otros').trim():'Transferencia / MP',qFrom:iQF>=0?parseInt(row[iQF])||1:1,qTo:iQT>=0?parseInt(row[iQT])||1:1,type};
         added++;
       }
-      ref.update(updates).then(()=>{ closeOv('ov-import'); toast(`✓ ${added} transacciones importadas`); }).catch(e=>toast('Error: '+e.message,true));
+      // Save one by one for unique keys
+      let chain2 = Promise.resolve();
+      Object.values(updates).forEach(d => { chain2 = chain2.then(() => push(ref(db, txPath()), d)); });
+      chain2.then(()=>{ closeOv('ov-import'); toast(`✓ ${added} transacciones importadas`); }).catch(e=>toast('Error: '+e.message,true));
     }catch(err){ toast('Error: '+err.message,true); }
   };
   reader.readAsArrayBuffer(file);
@@ -641,6 +646,7 @@ function toast(msg,err=false){
   t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),3000);
 }
+
 </script>
 </body>
 </html>
