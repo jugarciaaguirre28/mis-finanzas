@@ -417,7 +417,7 @@ function changeMonth(d) {
   if (state.currentMonth>11) { state.currentMonth=0;  state.currentYear++; }
   updateMonthDisplay(); renderAll();
 }
-function txForMonth(m,y) { return state.transactions.filter(t=>{ const d=new Date(t.date); return d.getMonth()===m&&d.getFullYear()===y; }); }
+function txForMonth(m,y) { return state.transactions.filter(t=>{ const d=new Date(t.date+'T00:00:00'); return d.getMonth()===m&&d.getFullYear()===y; }); }
 function currentTx() { return txForMonth(state.currentMonth,state.currentYear); }
 function fmt(n) { return '$'+Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
 
