@@ -291,6 +291,7 @@
     <div class="form-group" style="margin-bottom:20px"><label>Archivo Excel</label><input type="file" id="xlsxFile" accept=".xlsx,.xls" style="padding:10px"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal('importModal')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cargarMarzo2026()" style="border-color:var(--accent);color:var(--accent)">⚡ Cargar Marzo 2026</button>
       <button class="btn btn-primary" onclick="importExcel()">Importar</button>
     </div>
   </div>
@@ -682,6 +683,54 @@ async function importExcel() {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+async function cargarMarzo2026() {
+  const datos = [
+    {date:"2026-03-04",amount:300000,desc:"Alquiler",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Vivienda",type:"expense"},
+    {date:"2026-03-19",amount:30000,desc:"Comida Sammy",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Mascotas",type:"expense"},
+    {date:"2026-03-01",amount:3500,desc:"Delicias",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-02",amount:60000,desc:"Efectivo",method:"Efectivo",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-02",amount:6000,desc:"Cumple JC",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Regalos",type:"expense"},
+    {date:"2026-03-02",amount:5000,desc:"Carga Sube",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-03",amount:8000,desc:"Combi",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-03",amount:22648,desc:"Aubasa",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-03",amount:14000,desc:"Merienda",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-04",amount:9000,desc:"Almacén",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Supermercado",type:"expense"},
+    {date:"2026-03-02",amount:9260,desc:"PSA",method:"Tarjeta VISA",qFrom:1,qTo:1,cat:"Tarjeta",type:"expense"},
+    {date:"2026-03-02",amount:22000,desc:"Havanna",method:"Tarjeta VISA",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-02",amount:8400,desc:"USD",method:"Tarjeta VISA",qFrom:1,qTo:1,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-02",amount:80152,desc:"Definit",method:"Tarjeta VISA",qFrom:6,qTo:12,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-02",amount:6500,desc:"Pigmento",method:"Tarjeta VISA",qFrom:4,qTo:6,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-02",amount:19000,desc:"Gym mío",method:"Tarjeta VISA",qFrom:1,qTo:1,cat:"Tarjeta",type:"expense"},
+    {date:"2026-03-02",amount:19000,desc:"Gym papá",method:"Tarjeta VISA",qFrom:1,qTo:1,cat:"Tarjeta",type:"expense"},
+    {date:"2026-03-02",amount:20500,desc:"Lavarropas",method:"Tarjeta VISA",qFrom:7,qTo:12,cat:"Tarjeta",type:"expense"},
+    {date:"2026-03-06",amount:75000,desc:"Nafta",method:"Tarjeta MASTER",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-06",amount:10327.25,desc:"Farmaonline",method:"Tarjeta MASTER",qFrom:1,qTo:1,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-06",amount:73029.87,desc:"Nafta 2",method:"Tarjeta MASTER",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-06",amount:16267,desc:"Corte mascota",method:"Tarjeta MASTER",qFrom:2,qTo:3,cat:"Mascotas",type:"expense"},
+    {date:"2026-03-06",amount:8238,desc:"Farmacity",method:"Tarjeta MASTER",qFrom:1,qTo:3,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-07",amount:49500,desc:"Juntadita JM",method:"Transferencia / MP",qFrom:1,qTo:3,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-07",amount:10000,desc:"Propina",method:"Efectivo",qFrom:1,qTo:1,cat:"Salidas",type:"expense"},
+    {date:"2026-03-08",amount:8000,desc:"Donación perros",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Mascotas",type:"expense"},
+    {date:"2026-03-07",amount:4280,desc:"Corredores viales",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-06",amount:10000,desc:"Shell nafta",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-08",amount:71250,desc:"Multa",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-09",amount:17590,desc:"Fiambrería",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-09",amount:5000,desc:"Barbería",method:"Efectivo",qFrom:1,qTo:1,cat:"Gastos personales",type:"expense"},
+    {date:"2026-03-10",amount:8000,desc:"Combi",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Transporte",type:"expense"},
+    {date:"2026-03-10",amount:21000,desc:"Almuerzo trabajo",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Regalos",type:"expense"},
+    {date:"2026-03-10",amount:3000,desc:"Donación perros",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Mascotas",type:"expense"},
+    {date:"2026-03-11",amount:9800,desc:"Soda",method:"Efectivo",qFrom:1,qTo:1,cat:"Comida",type:"expense"},
+    {date:"2026-03-19",amount:2492493.4,desc:"Sueldo",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Sueldo",type:"income"},
+    {date:"2026-03-19",amount:563380.74,desc:"Restante",method:"Transferencia / MP",qFrom:1,qTo:1,cat:"Ahorro",type:"income"},
+    {date:"2026-03-04",amount:10000,desc:"Mamá",method:"Efectivo",qFrom:1,qTo:1,cat:"Efectivo",type:"income"},
+    {date:"2026-03-05",amount:40000,desc:"En cartera",method:"Efectivo",qFrom:1,qTo:1,cat:"Efectivo",type:"income"}
+  ];
+  showToast('Cargando datos...');
+  await window._saveBatchTx(datos);
+  closeModal('importModal');
+  showToast('✓ ' + datos.length + ' transacciones de Marzo 2026 cargadas');
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
