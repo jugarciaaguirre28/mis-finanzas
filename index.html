@@ -176,6 +176,7 @@ input::placeholder{color:var(--d)}
           <input class="si" id="srch" placeholder="Buscar...">
           <select class="ss" id="fcat" ><option value="">Todas las categorías</option></select>
           <select class="ss" id="ftype" ><option value="">Tipo</option><option value="expense">Gastos</option><option value="income">Ingresos</option></select>
+          <button class="btn bg bsm" id="btnExport">⬇ Excel</button>
         </div>
         <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Método</th><th>Cuotas</th><th style="text-align:right">Importe</th><th></th></tr></thead>
         <tbody id="txbody"></tbody></table>
@@ -223,6 +224,9 @@ input::placeholder{color:var(--d)}
     </div>
 
     <div class="view" id="view-investments">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn by bsm" id="btnLoadPortfolio">⚡ Cargar mi portfolio</button>
+      </div>
       <div class="g4" id="inv-summary">
         <div class="card"><div class="clbl">Total invertido</div><div class="cval" id="inv-total">$0</div><div class="csub">en pesos</div></div>
         <div class="card ac"><div class="clbl">Valor actual</div><div class="cval" id="inv-current">$0</div><div class="csub">según precio actual</div></div>
@@ -890,6 +894,21 @@ function exportToExcel() {
   toast('✓ Excel descargado');
 }
 
+
+// ── LOAD PORTFOLIO FROM CSV ──
+async function loadPortfolio() {
+  const portfolio = [
+    {type:'stock', ticker:'SPY', qty:8,    buyPrice:48680, curPrice:48680, date:'2026-03-18', notes:'CEDEAR SPDR S&P 500'},
+    {type:'stock', ticker:'MSFT',qty:21,   buyPrice:19200, curPrice:19200, date:'2026-03-18', notes:'CEDEAR Microsoft Corp'},
+    {type:'dolar', ticker:'USD Efectivo', qty:29.08, buyPrice:1, curPrice:1, date:'2026-03-18', notes:'USD disponible'},
+  ];
+  for (const d of portfolio) {
+    await push(ref(db, invPath()), d);
+    await new Promise(r=>setTimeout(r,50));
+  }
+  toast('✓ Portfolio cargado');
+}
+
 // ── EVENT LISTENERS ──
 document.querySelectorAll('.tab[data-view]').forEach(tab=>{
   tab.addEventListener('click', ()=>{
@@ -945,14 +964,18 @@ document.getElementById('usd-cash').addEventListener('click', () => {
 });
 
 document.getElementById('btnExport').addEventListener('click', exportToExcel);
-document.getElementById('btnAddStock').addEventListener('click', ()=>openAddInvestment('stock'));
-document.getElementById('btnAddDolar').addEventListener('click', ()=>openAddInvestment('dolar'));
-document.getElementById('btnCloseStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
-document.getElementById('btnCancelStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
-document.getElementById('btnSaveStock').addEventListener('click', saveInvestment);
-document.getElementById('btnCloseUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
-document.getElementById('btnCancelUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
-document.getElementById('btnConfirmUpdatePrice').addEventListener('click', confirmUpdatePrice);
+
+// Investment buttons - use document level listener since tab may not be visible on load
+document.addEventListener('click', e => {
+  if (e.target.id === 'btnAddStock') openAddInvestment('stock');
+  if (e.target.id === 'btnAddDolar') openAddInvestment('dolar');
+  if (e.target.id === 'btnCloseStock' || e.target.id === 'btnCancelStock') document.getElementById('ov-stock').classList.remove('on');
+  if (e.target.id === 'btnSaveStock') saveInvestment();
+  if (e.target.id === 'btnCloseUpdatePrice' || e.target.id === 'btnCancelUpdatePrice') document.getElementById('ov-update-price').classList.remove('on');
+  if (e.target.id === 'btnConfirmUpdatePrice') confirmUpdatePrice();
+  if (e.target.id === 'btnAddRem1' || e.target.id === 'btnAddRem2') document.getElementById('ov-rem').classList.add('on');
+  if (e.target.id === 'btnLoadPortfolio') loadPortfolio();
+});
 </script>
 </body>
 </html>
