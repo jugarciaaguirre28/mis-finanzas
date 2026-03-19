@@ -392,11 +392,14 @@ window._saveBatchTx = async (txList) => {
   if(!currentUser) { console.error('No user logged in'); return; }
   const uid = currentUser.uid;
   const basePath = 'users/' + uid + '/transactions';
-  for(const tx of txList) {
+  // Build one object with all transactions and write in a single set()
+  const allData = {};
+  txList.forEach(tx => {
     const {id,...d} = tx;
-    const newRef = push(ref(db, basePath));
-    await set(newRef, d);
-  }
+    const newKey = push(ref(db, basePath)).key;
+    allData[newKey] = d;
+  });
+  await set(ref(db, basePath), allData);
 };
 window._deleteTx   = async id  => { await remove(ref(db,`${txPath()}/${id}`)); };
 window._saveRem    = async rem => { const {id,...d}=rem; await set(push(ref(db,remPath())),d); };
