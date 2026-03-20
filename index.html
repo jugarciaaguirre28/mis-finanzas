@@ -160,6 +160,10 @@ input::placeholder{color:var(--d)}
         <div class="card"><div class="clbl" style="margin-bottom:14px">Por categoría</div><div class="bars" id="cbars"></div></div>
         <div class="card"><div class="clbl" style="margin-bottom:14px">Medio de pago</div><div class="bars" id="mbars"></div></div>
       </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="clbl" style="margin-bottom:14px">💳 Cuotas pendientes</div>
+        <div id="cuotas-timeline"></div>
+      </div>
       <div class="card">
         <div style="display:flex;align-items:center;margin-bottom:14px">
           <span style="font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--m);flex:1">🔔 Recordatorios del mes</span>
@@ -487,6 +491,7 @@ function initApp(){
     renderRems();
   });
   listenInvestments();
+  listenUSD();
 
   // Wire investment buttons here — after login so uid is set
   // ── ALL BUTTON WIRING ──
@@ -540,7 +545,53 @@ function showViewById(name) {
 }
 
 // ── RENDER ──
-function renderAll(){ renderDash(); renderTx(); renderCompare(); renderRems(); }
+function renderAll(){ renderDash(); renderTx(); renderCompare(); renderRems(); renderCuotas(); }
+
+function renderCuotas(){
+  const el = document.getElementById('cuotas-timeline');
+  if (!el) return;
+  // Find all transactions with multiple installments (qTo > qFrom)
+  const cuotas = txs.filter(t => t.qTo > t.qFrom && t.type === 'expense');
+  if (!cuotas.length) {
+    el.innerHTML = '<div style="color:var(--d);font-size:15px;padding:8px 0">Sin cuotas pendientes</div>';
+    return;
+  }
+  // For each, figure out which installments are still pending from today
+  const today = new Date();
+  const todayMonth = today.getFullYear() * 12 + today.getMonth();
+  const rows = [];
+  cuotas.forEach(t => {
+    const txDate = new Date(t.date + 'T12:00:00');
+    const startMonth = txDate.getFullYear() * 12 + txDate.getMonth();
+    // qFrom = installment number of the tx month, qTo = last installment
+    const totalInstallments = t.qTo - t.qFrom + 1;
+    const monthsPassed = todayMonth - startMonth;
+    const paidInstallments = Math.min(monthsPassed + 1, totalInstallments); // +1 because first is paid on tx date
+    const remaining = totalInstallments - paidInstallments;
+    if (remaining <= 0) return; // fully paid
+    rows.push({ desc: t.desc, amount: t.amount, remaining, total: totalInstallments, paid: paidInstallments, method: t.method });
+  });
+  if (!rows.length) {
+    el.innerHTML = '<div style="color:var(--d);font-size:15px;padding:8px 0">Sin cuotas pendientes</div>';
+    return;
+  }
+  rows.sort((a,b) => a.remaining - b.remaining);
+  el.innerHTML = rows.map(r => {
+    const pct = ((r.paid / r.total) * 100).toFixed(0);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-weight:500;font-size:16px">${r.desc}</span>
+        <span style="font-size:14px;color:var(--m)">${r.paid}/${r.total} cuotas · ${fmt(r.amount)}/mes</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1;height:7px;background:var(--s2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;border-radius:3px;background:${r.remaining <= 2 ? 'var(--g)' : 'var(--a)'};width:${pct}%"></div>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:${r.remaining <= 2 ? 'var(--g)' : 'var(--a)'};white-space:nowrap">${r.remaining} restante${r.remaining > 1 ? 's' : ''} · ${fmt(r.amount * r.remaining)} total</span>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function renderDash(){
   const cur=curTxs();
