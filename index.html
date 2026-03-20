@@ -253,13 +253,13 @@ input::placeholder{color:var(--d)}
           <div class="clbl">🏦 Caja de ahorro</div>
           <div class="cval ac" id="usd-bank">USD 0</div>
           <div class="csub" id="usd-bank-ars">= $0</div>
-          <button class="btn bg bsm" id="btnEditBank" style="margin-top:12px;width:100%">✏️ Editar</button>
+          <button class="btn bg bsm" style="margin-top:12px;width:100%" onclick="openEditUsd('bank')">✏️ Editar</button>
         </div>
         <div class="card">
           <div class="clbl">💵 Efectivo</div>
           <div class="cval ac" id="usd-cash">USD 0</div>
           <div class="csub" id="usd-cash-ars">= $0</div>
-          <button class="btn bg bsm" id="btnEditCash" style="margin-top:12px;width:100%">✏️ Editar</button>
+          <button class="btn bg bsm" style="margin-top:12px;width:100%" onclick="openEditUsd('cash')">✏️ Editar</button>
         </div>
         <div class="card gn">
           <div class="clbl">Total USD</div>
@@ -267,7 +267,7 @@ input::placeholder{color:var(--d)}
           <div class="csub" id="usd-total-ars">= $0</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:12px">
             <input type="number" id="usd-rate" placeholder="Cotización $/USD" min="0" step="1" style="flex:1;padding:6px 8px;font-size:13px">
-            <button class="btn bg bsm" id="btnUpdateRate">OK</button>
+            <button class="btn bg bsm" onclick="saveUsdRate()">OK</button>
           </div>
         </div>
       </div>
@@ -283,7 +283,7 @@ input::placeholder{color:var(--d)}
     <p style="color:var(--m);font-size:16px;margin-bottom:20px;line-height:1.6">Seleccioná tu <strong style="color:var(--t)">.xlsx</strong> con columnas: Fecha, Importe, Descripción, Método, Cuota desde, Cuota hasta, Categoría, Tipo.</p>
     <div class="fg" style="margin-bottom:20px"><label class="flbl">Archivo</label><input type="file" id="xlfile" accept=".xlsx,.xls" style="padding:10px"></div>
     <div class="fact">
-      <button class="btn bg" id="btnCloseImport">Cancelar</button>
+      <button class="btn bg" id="btnCancelImport">Cancelar</button>
       <button class="btn by bsm" id="btnMarzo">⚡ Cargar Marzo 2026</button>
       <button class="btn bp" id="btnDoImport">Importar</button>
     </div>
@@ -317,8 +317,8 @@ input::placeholder{color:var(--d)}
       <input type="number" id="usd-edit-amount" placeholder="ej: 500" min="0" step="0.01">
     </div>
     <div class="fact">
-      <button class="btn bg" id="btnCancelUsd">Cancelar</button>
-      <button class="btn bp" id="btnSaveUsd">Guardar</button>
+      <button class="btn bg" onclick="document.getElementById('ov-usd').classList.remove('on')">Cancelar</button>
+      <button class="btn bp" onclick="saveUsd()">Guardar</button>
     </div>
   </div>
 </div>
@@ -513,6 +513,7 @@ function initApp(){
   document.getElementById('btnSave').onclick = saveTx;
   // Import modal
   document.getElementById('btnCloseImport').onclick = ()=>document.getElementById('ov-import').classList.remove('on');
+  document.getElementById('btnCancelImport').onclick = ()=>document.getElementById('ov-import').classList.remove('on');
   document.getElementById('btnMarzo').onclick = loadMarzo;
   document.getElementById('btnDoImport').onclick = doImport;
   // Reminder modal
@@ -531,11 +532,10 @@ function initApp(){
   document.getElementById('btnConfirmUpdatePrice').onclick = confirmUpdatePrice;
   document.getElementById('btnLoadPortfolio').onclick = loadPortfolio;
   // USD modal
-  document.getElementById('btnEditBank').onclick = ()=>openEditUsd('bank');
-  document.getElementById('btnEditCash').onclick = ()=>openEditUsd('cash');
-  document.getElementById('btnSaveUsd').onclick = saveUsd;
-  document.getElementById('btnCancelUsd').onclick = ()=>document.getElementById('ov-usd').classList.remove('on');
-  document.getElementById('btnUpdateRate').onclick = saveUsdRate;
+  // USD edit buttons wired via window functions (called from dynamic HTML)
+  window.openEditUsd = openEditUsd;
+  window.saveUsdRate = saveUsdRate;
+  // USD buttons use window.* functions via onclick in HTML
 }
 
 function showViewById(name) {
@@ -840,8 +840,12 @@ let usdData = { bank: 0, cash: 0, rate: 1200 };
 
 function listenUSD() {
   onValue(ref(db, usdPath()), snap => {
-    if (snap.exists()) usdData = { ...usdData, ...snap.val() };
-    renderUSD();
+    if (snap.exists()) {
+      const v = snap.val();
+      usdData = { bank: v.bank||0, cash: v.cash||0 };
+      usdRate = v.rate||0;
+    }
+    renderUsd();
   });
 }
 
