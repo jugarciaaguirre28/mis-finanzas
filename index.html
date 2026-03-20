@@ -351,7 +351,6 @@ input::placeholder{color:var(--d)}
         <select id="einv-currency"><option value="ARS">$ Pesos (ARS)</option><option value="USD">USD Dólares</option></select>
       </div>
       <div class="fg"><label class="flbl">Total pagado</label><input type="number" id="einv-buy" min="0" step="any" placeholder="ej: 285 USD"></div>
-      <div class="fg"><label class="flbl">Precio actual por unidad</label><input type="number" id="einv-cur" min="0" step="any"></div>
       <div class="fg"><label class="flbl">Fecha de compra</label><input type="date" id="einv-date"></div>
       <div class="fg full"><label class="flbl">Notas</label><input type="text" id="einv-notes"></div>
     </div>
@@ -394,7 +393,6 @@ input::placeholder{color:var(--d)}
         </select>
       </div>
       <div class="fg"><label class="flbl">Total pagado</label><input type="number" id="inv-buy-price" placeholder="ej: 285 USD o 389440 ARS" min="0" step="any"></div>
-      <div class="fg"><label class="flbl">Precio actual por unidad</label><input type="number" id="inv-cur-price" placeholder="precio unitario hoy" min="0" step="any"></div>
       <div class="fg"><label class="flbl">Fecha de compra</label><input type="date" id="inv-date"></div>
       <div class="fg full"><label class="flbl">Notas (opcional)</label><input type="text" id="inv-notes" placeholder="ej: Compré en caída, largo plazo"></div>
     </div>
@@ -761,7 +759,7 @@ window.saveEditInv = () => {
     qty:      parseFloat(document.getElementById('einv-qty').value),
     currency: document.getElementById('einv-currency').value,
     buyPrice: parseFloat(document.getElementById('einv-buy').value),
-    curPrice: parseFloat(document.getElementById('einv-cur').value),
+    curPrice: investments.find(x=>x.id===editInvId)?.curPrice || parseFloat(document.getElementById('einv-buy').value),
     date:     document.getElementById('einv-date').value,
     notes:    document.getElementById('einv-notes').value.trim(),
   };
@@ -1143,7 +1141,6 @@ function invRowHTML(i) {
       <div class="inv-detail-item"><span class="inv-detail-lbl">Unidades</span><span class="inv-detail-val">${i.qty}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Total pagado (${cur})</span><span class="inv-detail-val">${fmt(invested)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Precio/u calculado (${cur})</span><span class="inv-detail-val">${fmt(pricePerUnit)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio actual/u (${cur})</span><span class="inv-detail-val">${fmt(curPriceUnit)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual (${cur})</span><span class="inv-detail-val">${fmt(current)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Fecha compra</span><span class="inv-detail-val">${dateStr}</span></div>
     </div>
@@ -1173,7 +1170,7 @@ function saveInvestment() {
   const qty      = parseFloat(document.getElementById('inv-qty').value);
   const currency = document.getElementById('inv-currency').value;
   const buyPrice = parseFloat(document.getElementById('inv-buy-price').value);
-  const curPrice = parseFloat(document.getElementById('inv-cur-price').value) || buyPrice;
+  const curPrice = buyPrice; // updated later via "Actualizar precio"
   const date     = document.getElementById('inv-date').value;
   const notes    = document.getElementById('inv-notes').value.trim();
   if (!ticker || !qty || !buyPrice || !date) { toast('Completá los campos requeridos', true); return; }
