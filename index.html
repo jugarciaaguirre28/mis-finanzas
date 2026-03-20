@@ -600,26 +600,28 @@ function renderAll(){ renderDash(); renderTx(); renderCompare(); renderRems(); r
 function renderCuotas(){
   const el = document.getElementById('cuotas-timeline');
   if (!el) return;
-  // Find all transactions with multiple installments (qTo > qFrom)
-  const cuotas = txs.filter(t => t.qTo > t.qFrom && t.type === 'expense');
+  // qFrom = cuota número en el mes de la transacción, qTo = total de cuotas
+  // ej: qFrom:2, qTo:3 → es la cuota 2 de 3, registrada en el mes de la fecha
+  const cuotas = txs.filter(t => t.qTo > 1 && t.type === 'expense');
   if (!cuotas.length) {
     el.innerHTML = '<div style="color:var(--d);font-size:15px;padding:8px 0">Sin cuotas pendientes</div>';
     return;
   }
-  // For each, figure out which installments are still pending from today
   const today = new Date();
-  const todayMonth = today.getFullYear() * 12 + today.getMonth();
+  const todayAbsMonth = today.getFullYear() * 12 + today.getMonth();
   const rows = [];
   cuotas.forEach(t => {
     const txDate = new Date(t.date + 'T12:00:00');
-    const startMonth = txDate.getFullYear() * 12 + txDate.getMonth();
-    // qFrom = installment number of the tx month, qTo = last installment
-    const totalInstallments = t.qTo - t.qFrom + 1;
-    const monthsPassed = todayMonth - startMonth;
-    const paidInstallments = Math.min(monthsPassed + 1, totalInstallments); // +1 because first is paid on tx date
-    const remaining = totalInstallments - paidInstallments;
-    if (remaining <= 0) return; // fully paid
-    rows.push({ desc: t.desc, amount: t.amount, remaining, total: totalInstallments, paid: paidInstallments, method: t.method });
+    const txAbsMonth = txDate.getFullYear() * 12 + txDate.getMonth();
+    const total = t.qTo;                          // total de cuotas
+    const thisQuota = t.qFrom || 1;               // número de cuota de esta tx
+    // cuota actual = thisQuota + meses transcurridos desde la tx
+    const monthsPassed = todayAbsMonth - txAbsMonth;
+    const currentQuota = thisQuota + monthsPassed; // qué cuota se paga hoy
+    const paid = Math.min(currentQuota, total);
+    const remaining = total - paid;
+    if (remaining <= 0) return;
+    rows.push({ desc: t.desc, amount: t.amount, remaining, total, paid, method: t.method });
   });
   if (!rows.length) {
     el.innerHTML = '<div style="color:var(--d);font-size:15px;padding:8px 0">Sin cuotas pendientes</div>';
@@ -1073,8 +1075,9 @@ function renderInvestments() {
       const cols = Math.min(stocks.length, 4);
       kpiEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:14px">' +
         stocks.map(i => {
-          const totalInv = i.qty * i.buyPrice;
-          const totalCur = i.qty * (i.curPrice || i.buyPrice);
+          const totalInv = i.buyPrice; // buyPrice = total paid
+          const pricePerUnitKpi = i.qty > 0 ? totalInv / i.qty : 0;
+          const totalCur = i.qty * (i.curPrice || pricePerUnitKpi);
           const cur      = i.currency || 'ARS';
           const gain     = totalCur - totalInv;
           const gainPct  = totalInv > 0 ? ((gain/totalInv)*100).toFixed(1) : '0.0';
@@ -1082,8 +1085,7 @@ function renderInvestments() {
           return '<div class="card">' +
             '<div class="clbl">'+i.ticker+'</div>' +
             '<div style="font-size:22px;font-family:\'DM Serif Display\',serif;margin-bottom:4px">'+i.qty+' unidades</div>' +
-            '<div style="font-size:14px;color:var(--m)">Total pagado: '+fmt(totalInv)+' '+cur+'</div>' +
-            '<div style="font-size:14px;color:var(--m)">Precio/u: '+fmt(i.qty>0?totalInv/i.qty:0)+' '+cur+'</div>' +
+            '<div style="font-size:14px;color:var(--m)">Precio/u: '+fmt(pricePerUnitKpi)+' '+cur+'</div>' +
             '<div style="font-size:15px;font-weight:600;color:'+gainColor+';margin-top:6px">'+(gain>=0?'+':'−')+fmt(Math.abs(gain))+' ('+(gain>=0?'+':'')+gainPct+'%)</div>' +
             '</div>';
         }).join('') + '</div>';
@@ -1119,11 +1121,11 @@ function renderInvestments() {
 }
 
 function invRowHTML(i) {
-  // buyPrice = price per unit, invested = total
-  const pricePerUnit = i.buyPrice;
-  const invested = i.qty * pricePerUnit;
+  // buyPrice = total paid, pricePerUnit = buyPrice / qty
+  const invested = i.buyPrice;
+  const pricePerUnit = i.qty > 0 ? i.buyPrice / i.qty : 0;
   const curPriceUnit = i.curPrice || pricePerUnit;
-  const current  = i.qty * curPriceUnit;
+  const current = i.qty * curPriceUnit;
   const gain     = current - invested;
   const gainPct  = invested > 0 ? ((gain / invested) * 100).toFixed(1) : '0.0';
   const gainClass = gain >= 0 ? 'inv-gain-pos' : 'inv-gain-neg';
@@ -1138,9 +1140,7 @@ function invRowHTML(i) {
     </div>
     <div class="inv-row-detail">
       <div class="inv-detail-item"><span class="inv-detail-lbl">Unidades</span><span class="inv-detail-val">${i.qty}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Total pagado (${cur})</span><span class="inv-detail-val">${fmt(invested)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio/u calculado (${cur})</span><span class="inv-detail-val">${fmt(pricePerUnit)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual (${cur})</span><span class="inv-detail-val">${fmt(current)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio/u (${cur})</span><span class="inv-detail-val">${fmt(pricePerUnit)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Fecha compra</span><span class="inv-detail-val">${dateStr}</span></div>
     </div>
     ${i.notes ? `<div style="font-size:14px;color:var(--m);margin-top:8px">📝 ${i.notes}</div>` : ''}
