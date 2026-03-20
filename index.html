@@ -233,8 +233,7 @@ input::placeholder{color:var(--d)}
       <!-- SECTION: CEDEARs / Acciones -->
       <div style="display:flex;align-items:center;margin-bottom:14px">
         <div style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">📊 CEDEARs y Acciones</div>
-        <button class="btn by bsm" onclick="loadPortfolio()">⚡ Cargar mi portfolio</button>
-        <button class="btn bp bsm" style="margin-left:8px" onclick="openAddInvestment('stock')">+ Agregar</button>
+        <button class="btn bp bsm" onclick="openAddInvestment('stock')">+ Agregar</button>
       </div>
       <div class="g4" style="margin-bottom:16px">
         <div class="card"><div class="clbl">Invertido (ARS)</div><div class="cval" id="inv-total">$0</div><div class="csub" id="inv-total-usd">USD 0</div></div>
@@ -835,9 +834,13 @@ function listenUSD() {
   onValue(ref(db, usdPath()), snap => {
     if (snap.exists()) {
       const v = snap.val();
-      usdData = { bank: v.bank||0, cash: v.cash||0 };
-      usdRate = v.rate||0;
+      usdData.bank = v.bank||0;
+      usdData.cash = v.cash||0;
+      usdRate = v.rate||usdRate||0;
     }
+    // Sync rate input with stored value
+    const rateInput = document.getElementById('usd-rate');
+    if (rateInput && usdRate) rateInput.value = usdRate;
     renderUsd();
   });
 }
@@ -851,7 +854,9 @@ function listenInvestments() {
 }
 
 function renderUsd() {
-  const rate = parseFloat(document.getElementById('usd-rate')?.value)||usdRate||0;
+  // Always use usdRate (from Firebase), fallback to input value
+  const inputRate = parseFloat(document.getElementById('usd-rate')?.value)||0;
+  const rate = usdRate || inputRate;
   const bank = usdData.bank||0, cash = usdData.cash||0, total = bank+cash;
   const fmtUsd = n => 'USD '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('usd-bank').textContent = fmtUsd(bank);
@@ -874,7 +879,9 @@ function saveUsd() {
   const amount = parseFloat(document.getElementById('usd-edit-amount').value)||0;
   if (editingUsdField==='bank') usdData.bank = amount;
   else usdData.cash = amount;
-  set(ref(db, usdPath()), {...usdData, rate: usdRate});
+  // Always persist current rate alongside the data
+  const rateToSave = usdRate || parseFloat(document.getElementById('usd-rate')?.value)||0;
+  set(ref(db, usdPath()), {bank: usdData.bank, cash: usdData.cash, rate: rateToSave});
   document.getElementById('ov-usd').classList.remove('on');
   toast('✓ USD actualizado');
 }
@@ -1002,7 +1009,6 @@ window.saveInvestment = saveInvestment;
 window.openEditUsd = openEditUsd;
 window.saveUsd = saveUsd;
 window.saveUsdRate = saveUsdRate;
-window.loadPortfolio = loadPortfolio;
 window.confirmUpdatePrice = confirmUpdatePrice;
 
 // ── EXPORT TO EXCEL ──
@@ -1024,18 +1030,7 @@ function exportToExcel() {
 
 
 // ── LOAD PORTFOLIO FROM CSV ──
-async function loadPortfolio() {
-  const portfolio = [
-    {type:'stock', ticker:'SPY', qty:8,    buyPrice:48680, curPrice:48680, date:'2026-03-18', notes:'CEDEAR SPDR S&P 500'},
-    {type:'stock', ticker:'MSFT',qty:21,   buyPrice:19200, curPrice:19200, date:'2026-03-18', notes:'CEDEAR Microsoft Corp'},
-    {type:'dolar', ticker:'USD Efectivo', qty:29.08, buyPrice:1, curPrice:1, date:'2026-03-18', notes:'USD disponible'},
-  ];
-  for (const d of portfolio) {
-    await push(ref(db, invPath()), d);
-    await new Promise(r=>setTimeout(r,50));
-  }
-  toast('✓ Portfolio cargado');
-}
+
 
 // ── EVENT LISTENERS ──
 
