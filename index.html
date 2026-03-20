@@ -150,26 +150,26 @@ input::placeholder{color:var(--d)}
   </div>
   <div class="content">
     <div class="view on" id="view-dashboard">
-      <div class="g4">
+      <div class="g4" style="margin-bottom:20px">
         <div class="card gn"><div class="clbl">Ingresos</div><div class="cval" id="iv">$0</div><div class="csub" id="is">0 transacciones</div></div>
         <div class="card rd"><div class="clbl">Gastos</div><div class="cval" id="ev">$0</div><div class="csub" id="es">0 transacciones</div></div>
         <div class="card ac"><div class="clbl">Balance</div><div class="cval" id="bv">$0</div><div class="csub">ingresos − gastos</div></div>
         <div class="card"><div class="clbl">Mayor gasto</div><div class="cval" id="tc" style="font-size:19px">—</div><div class="csub" id="ta">—</div></div>
       </div>
-      <div class="g2">
-        <div class="card"><div class="clbl" style="margin-bottom:14px">Por categoría</div><div class="bars" id="cbars"></div></div>
-        <div class="card"><div class="clbl" style="margin-bottom:14px">Medio de pago</div><div class="bars" id="mbars"></div></div>
-      </div>
       <div class="card" style="margin-bottom:20px">
-        <div class="clbl" style="margin-bottom:14px">💳 Cuotas pendientes</div>
-        <div id="cuotas-timeline"></div>
-      </div>
-      <div class="card">
         <div style="display:flex;align-items:center;margin-bottom:14px">
           <span style="font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--m);flex:1">🔔 Recordatorios del mes</span>
           <button class="btn bg bsm" id="btnAddRem1">+ Agregar</button>
         </div>
         <div id="drems"></div>
+      </div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card"><div class="clbl" style="margin-bottom:14px">Por categoría</div><div class="bars" id="cbars"></div></div>
+        <div class="card"><div class="clbl" style="margin-bottom:14px">Medio de pago</div><div class="bars" id="mbars"></div></div>
+      </div>
+      <div class="card">
+        <div class="clbl" style="margin-bottom:14px">💳 Cuotas pendientes</div>
+        <div id="cuotas-timeline"></div>
       </div>
     </div>
 
@@ -235,15 +235,20 @@ input::placeholder{color:var(--d)}
     <div class="view" id="view-investments">
 
       <!-- SECTION: CEDEARs / Acciones -->
-      <div style="display:flex;align-items:center;margin-bottom:14px">
+      <div style="display:flex;align-items:center;margin-bottom:16px">
         <div style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">📊 CEDEARs y Acciones</div>
         <button class="btn bp bsm" onclick="openAddInvestment('stock')">+ Agregar</button>
       </div>
-      <div class="g4" style="margin-bottom:16px">
-        <div class="card"><div class="clbl">Invertido (ARS)</div><div class="cval" id="inv-total">$0</div><div class="csub" id="inv-total-usd">USD 0</div></div>
-        <div class="card ac"><div class="clbl">Valor actual (ARS)</div><div class="cval" id="inv-current">$0</div><div class="csub" id="inv-current-usd">USD 0</div></div>
-        <div class="card"><div class="clbl">Ganancia / Pérdida</div><div class="cval" id="inv-gain">$0</div><div class="csub" id="inv-gain-pct">—</div></div>
-        <div class="card"><div class="clbl">Posiciones</div><div class="cval" id="inv-count" style="font-size:30px">0</div><div class="csub">activos</div></div>
+      <div id="inv-kpis" style="margin-bottom:16px"></div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="clbl" style="margin-bottom:14px">Distribución por instrumento (ARS)</div>
+          <div class="bars" id="inv-chart-ars"></div>
+        </div>
+        <div class="card">
+          <div class="clbl" style="margin-bottom:14px">Distribución por instrumento (USD)</div>
+          <div class="bars" id="inv-chart-usd"></div>
+        </div>
       </div>
       <div class="card" style="margin-bottom:24px">
         <div id="inv-stocks"><div class="empty" style="padding:20px;font-size:15px">Sin posiciones aún</div></div>
@@ -310,6 +315,53 @@ input::placeholder{color:var(--d)}
   </div>
 </div>
 
+<!-- EDIT TRANSACTION MODAL -->
+<div class="ov" id="ov-edit-tx">
+  <div class="modal">
+    <div class="mtit">Editar transacción <button class="xb" onclick="document.getElementById('ov-edit-tx').classList.remove('on')">×</button></div>
+    <div class="fgrid">
+      <div class="fg"><label class="flbl">Fecha</label><input type="date" id="etx-date"></div>
+      <div class="fg"><label class="flbl">Importe ($)</label><input type="number" id="etx-amt" min="0" step="0.01"></div>
+      <div class="fg full"><label class="flbl">Descripción</label><input type="text" id="etx-desc"></div>
+      <div class="fg"><label class="flbl">Categoría</label><select id="etx-cat"></select></div>
+      <div class="fg"><label class="flbl">Método</label>
+        <select id="etx-meth"><option>Transferencia / MP</option><option>Efectivo</option><option>Tarjeta VISA</option><option>Tarjeta MASTER</option><option>Tarjetas adicionales</option><option>Débito</option></select>
+      </div>
+      <div class="fg"><label class="flbl">Cuota desde</label><input type="number" id="etx-qf" min="1"></div>
+      <div class="fg"><label class="flbl">Cuota hasta</label><input type="number" id="etx-qt" min="1"></div>
+    </div>
+    <div class="fact">
+      <button class="btn bg" onclick="document.getElementById('ov-edit-tx').classList.remove('on')">Cancelar</button>
+      <button class="btn bp" onclick="saveEditTx()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT INVESTMENT MODAL -->
+<div class="ov" id="ov-edit-inv">
+  <div class="modal">
+    <div class="mtit">Editar inversión <button class="xb" onclick="document.getElementById('ov-edit-inv').classList.remove('on')">×</button></div>
+    <div class="fgrid">
+      <div class="fg"><label class="flbl">Tipo</label>
+        <select id="einv-type"><option value="stock">Acción / CEDEAR</option><option value="dolar">Dólar</option></select>
+      </div>
+      <div class="fg"><label class="flbl">Ticker / Nombre</label><input type="text" id="einv-ticker"></div>
+      <div class="fg"><label class="flbl">Cantidad</label><input type="number" id="einv-qty" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Moneda</label>
+        <select id="einv-currency"><option value="ARS">$ Pesos (ARS)</option><option value="USD">USD Dólares</option></select>
+      </div>
+      <div class="fg"><label class="flbl">Total invertido</label><input type="number" id="einv-buy" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Precio actual por unidad</label><input type="number" id="einv-cur" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Fecha de compra</label><input type="date" id="einv-date"></div>
+      <div class="fg full"><label class="flbl">Notas</label><input type="text" id="einv-notes"></div>
+    </div>
+    <div class="fact">
+      <button class="btn bg" onclick="document.getElementById('ov-edit-inv').classList.remove('on')">Cancelar</button>
+      <button class="btn bp" onclick="saveEditInv()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- STOCK MODAL -->
 <!-- USD EDIT MODAL -->
 <div class="ov" id="ov-usd">
@@ -341,8 +393,8 @@ input::placeholder{color:var(--d)}
           <option value="USD">USD Dólares</option>
         </select>
       </div>
-      <div class="fg"><label class="flbl">Precio de compra</label><input type="number" id="inv-buy-price" placeholder="ej: 48680 ARS o 50 USD" min="0" step="any"></div>
-      <div class="fg"><label class="flbl">Precio actual</label><input type="number" id="inv-cur-price" placeholder="mismo que compra si no sabés" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Total invertido (todas las unidades)</label><input type="number" id="inv-buy-price" placeholder="ej: 389440 ARS" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Precio actual por unidad</label><input type="number" id="inv-cur-price" placeholder="precio unitario hoy" min="0" step="any"></div>
       <div class="fg"><label class="flbl">Fecha de compra</label><input type="date" id="inv-date"></div>
       <div class="fg full"><label class="flbl">Notas (opcional)</label><input type="text" id="inv-notes" placeholder="ej: Compré en caída, largo plazo"></div>
     </div>
@@ -645,12 +697,79 @@ function renderTx(){
       <td><span class="mtag">${t.method}</span></td>
       <td style="color:var(--m);font-size:14px">${t.qFrom===t.qTo?'—':t.qFrom+'/'+t.qTo}</td>
       <td style="text-align:right"><span class="${t.type==='income'?'pos':'neg'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</span></td>
-      <td><button onclick="delTx('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);padding:4px 8px;font-size:18px">×</button></td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <button onclick="openEditTx('${t.id}')" style="background:none;border:1px solid var(--b);border-radius:6px;cursor:pointer;color:var(--m);padding:3px 8px;font-size:13px">✏️</button>
+        <button onclick="delTx('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);padding:4px 8px;font-size:18px">×</button>
+      </td>
     </tr>`;
   }).join('');
 }
 
 window.delTx=id=>{remove(ref(db,txPath()+'/'+id));toast('Transacción eliminada');};
+
+let editTxId = null;
+window.openEditTx = (id) => {
+  const t = txs.find(x=>x.id===id); if(!t) return;
+  editTxId = id;
+  const all=[...EC,...IC];
+  document.getElementById('etx-cat').innerHTML = all.map(c=>`<option${t.cat===c?' selected':''}>${c}</option>`).join('');
+  document.getElementById('etx-date').value = t.date;
+  document.getElementById('etx-amt').value  = t.amount;
+  document.getElementById('etx-desc').value = t.desc;
+  document.getElementById('etx-meth').value = t.method;
+  document.getElementById('etx-qf').value   = t.qFrom;
+  document.getElementById('etx-qt').value   = t.qTo;
+  document.getElementById('ov-edit-tx').classList.add('on');
+};
+window.saveEditTx = () => {
+  if (!editTxId) return;
+  const data = {
+    date:   document.getElementById('etx-date').value,
+    amount: parseFloat(document.getElementById('etx-amt').value),
+    desc:   document.getElementById('etx-desc').value.trim(),
+    cat:    document.getElementById('etx-cat').value,
+    method: document.getElementById('etx-meth').value,
+    qFrom:  parseInt(document.getElementById('etx-qf').value)||1,
+    qTo:    parseInt(document.getElementById('etx-qt').value)||1,
+    type:   txs.find(x=>x.id===editTxId)?.type || 'expense',
+  };
+  if(!data.date||!data.amount||!data.desc){toast('Completá los campos requeridos',true);return;}
+  set(ref(db, txPath()+'/'+editTxId), data);
+  document.getElementById('ov-edit-tx').classList.remove('on');
+  toast('✓ Transacción actualizada');
+};
+
+let editInvId = null;
+window.openEditInv = (id) => {
+  const i = investments.find(x=>x.id===id); if(!i) return;
+  editInvId = id;
+  document.getElementById('einv-type').value     = i.type;
+  document.getElementById('einv-ticker').value   = i.ticker;
+  document.getElementById('einv-qty').value      = i.qty;
+  document.getElementById('einv-currency').value = i.currency||'ARS';
+  document.getElementById('einv-buy').value      = i.buyPrice;
+  document.getElementById('einv-cur').value      = i.curPrice||i.buyPrice;
+  document.getElementById('einv-date').value     = i.date;
+  document.getElementById('einv-notes').value    = i.notes||'';
+  document.getElementById('ov-edit-inv').classList.add('on');
+};
+window.saveEditInv = () => {
+  if (!editInvId) return;
+  const data = {
+    type:     document.getElementById('einv-type').value,
+    ticker:   document.getElementById('einv-ticker').value.trim().toUpperCase(),
+    qty:      parseFloat(document.getElementById('einv-qty').value),
+    currency: document.getElementById('einv-currency').value,
+    buyPrice: parseFloat(document.getElementById('einv-buy').value),
+    curPrice: parseFloat(document.getElementById('einv-cur').value),
+    date:     document.getElementById('einv-date').value,
+    notes:    document.getElementById('einv-notes').value.trim(),
+  };
+  if(!data.ticker||!data.qty||!data.buyPrice){toast('Completá los campos requeridos',true);return;}
+  set(ref(db, invPath()+'/'+editInvId), data);
+  document.getElementById('ov-edit-inv').classList.remove('on');
+  toast('✓ Inversión actualizada');
+};
 
 function renderCompare(){
   let pm=curMonth-1,py=curYear; if(pm<0){pm=11;py--;}
@@ -947,35 +1066,60 @@ function saveUsdRate() {
 
 function renderInvestments() {
   const stocks = investments.filter(i => i.type === 'stock');
-  const dolares = investments.filter(i => i.type === 'dolar');
 
-  let totalInvested = 0, totalCurrent = 0;
-  investments.forEach(i => {
-    totalInvested += i.qty * i.buyPrice;
-    totalCurrent  += i.qty * (i.curPrice || i.buyPrice);
-  });
-  const gain = totalCurrent - totalInvested;
-  const gainPct = totalInvested > 0 ? ((gain / totalInvested) * 100).toFixed(1) : 0;
+  // ── KPIs: one card per instrument ──
+  const kpiEl = document.getElementById('inv-kpis');
+  if (kpiEl) {
+    if (!stocks.length) {
+      kpiEl.innerHTML = '<div class="empty" style="padding:16px;font-size:15px">Sin posiciones aún. Usá + Agregar.</div>';
+    } else {
+      const cols = Math.min(stocks.length, 4);
+      kpiEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:14px">' +
+        stocks.map(i => {
+          const totalInv = i.qty * i.buyPrice;
+          const totalCur = i.qty * (i.curPrice || i.buyPrice);
+          const avgPx    = i.qty > 0 ? (totalInv / i.qty) : 0;
+          const cur      = i.currency || 'ARS';
+          const gain     = totalCur - totalInv;
+          const gainPct  = totalInv > 0 ? ((gain/totalInv)*100).toFixed(1) : '0.0';
+          const gainColor = gain >= 0 ? 'var(--g)' : 'var(--r)';
+          return '<div class="card">' +
+            '<div class="clbl">'+i.ticker+'</div>' +
+            '<div style="font-size:22px;font-family:\'DM Serif Display\',serif;margin-bottom:4px">'+i.qty+' unidades</div>' +
+            '<div style="font-size:14px;color:var(--m)">Precio prom: '+fmt(avgPx)+' '+cur+'</div>' +
+            '<div style="font-size:14px;color:var(--m)">Invertido: '+fmt(totalInv)+' '+cur+'</div>' +
+            '<div style="font-size:15px;font-weight:600;color:'+gainColor+';margin-top:6px">'+(gain>=0?'+':'−')+fmt(Math.abs(gain))+' ('+(gain>=0?'+':'')+gainPct+'%)</div>' +
+            '</div>';
+        }).join('') + '</div>';
+    }
+  }
 
-  // Add USD value to summary
-  const usdValueARS = (usdData.bank + usdData.cash) * usdData.rate;
-  document.getElementById('inv-total').textContent = fmt(totalInvested + usdValueARS);
-  document.getElementById('inv-current').textContent = fmt(totalCurrent + usdValueARS);
-  const cv = document.getElementById('inv-current');
-  const gv = document.getElementById('inv-gain');
-  gv.textContent = (gain >= 0 ? '+' : '−') + fmt(Math.abs(gain));
-  gv.style.color = gain >= 0 ? 'var(--g)' : 'var(--r)';
-  document.getElementById('inv-gain-pct').textContent = (gain >= 0 ? '+' : '') + gainPct + '%';
-  document.getElementById('inv-count').textContent = investments.length;
+  // ── CHARTS ──
+  const arsEl = document.getElementById('inv-chart-ars');
+  const usdEl = document.getElementById('inv-chart-usd');
+  if (arsEl) {
+    const arsStocks = stocks.filter(i => (i.currency||'ARS') === 'ARS');
+    const maxArs = Math.max(...arsStocks.map(i => i.qty * i.buyPrice), 1);
+    arsEl.innerHTML = arsStocks.length ? arsStocks.map((i,idx) => {
+      const v = i.qty * i.buyPrice;
+      return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">'+fmt(v)+'</span></div>' +
+        '<div class="btrack"><div class="bfill" style="width:'+(v/maxArs*100).toFixed(1)+'%;background:'+COL[idx%COL.length]+'"></div></div></div>';
+    }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en ARS</div>';
+  }
+  if (usdEl) {
+    const usdStocks = stocks.filter(i => i.currency === 'USD');
+    const maxUsd = Math.max(...usdStocks.map(i => i.qty * i.buyPrice), 1);
+    usdEl.innerHTML = usdStocks.length ? usdStocks.map((i,idx) => {
+      const v = i.qty * i.buyPrice;
+      return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">USD '+v.toLocaleString('es-AR',{maximumFractionDigits:2})+'</span></div>' +
+        '<div class="btrack"><div class="bfill" style="width:'+(v/maxUsd*100).toFixed(1)+'%;background:'+COL[(idx+3)%COL.length]+'"></div></div></div>';
+    }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en USD</div>';
+  }
 
+  // ── TABLE ──
   document.getElementById('inv-stocks').innerHTML = stocks.length
     ? stocks.map(i => invRowHTML(i)).join('')
     : '<div class="empty" style="padding:24px;font-size:15px">Sin posiciones aún</div>';
-
-  document.getElementById('inv-dolares').innerHTML = dolares.length
-    ? dolares.map(i => invRowHTML(i)).join('')
-    : '<div class="empty" style="padding:24px;font-size:15px">Sin posiciones aún</div>';
-  if (typeof renderUsdSummary === 'function') renderUsdSummary();
 }
 
 function invRowHTML(i) {
@@ -1005,6 +1149,7 @@ function invRowHTML(i) {
     </div>
     ${i.notes ? `<div style="font-size:14px;color:var(--m);margin-top:8px">📝 ${i.notes}</div>` : ''}
     <div class="inv-actions">
+      <button class="btn bg btn-xs" onclick="openEditInv('${i.id}')">✏️ Editar</button>
       <button class="btn bg btn-xs" onclick="openUpdatePrice('${i.id}', '${i.ticker}', ${curPriceUnit})">💱 Actualizar precio</button>
       <button class="btn bg btn-xs" onclick="deleteInvestment('${i.id}')" style="color:var(--r);border-color:var(--rd)">× Eliminar</button>
     </div>
