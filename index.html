@@ -924,27 +924,30 @@ function invRowHTML(i) {
   const invested = i.qty * i.buyPrice;
   const current  = i.qty * (i.curPrice || i.buyPrice);
   const gain     = current - invested;
-  const gainPct  = ((gain / invested) * 100).toFixed(1);
+  const gainPct  = invested > 0 ? ((gain / invested) * 100).toFixed(1) : '0.0';
   const gainClass = gain >= 0 ? 'inv-gain-pos' : 'inv-gain-neg';
   const gainSign  = gain >= 0 ? '+' : '−';
+  const avgPrice  = i.qty > 0 ? (invested / i.qty) : 0;
+  const curPriceUnit = i.curPrice || i.buyPrice;
   const d = new Date(i.date + 'T12:00:00');
   const dateStr = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+  const cur = i.currency || 'ARS';
   return `<div class="inv-row">
     <div class="inv-row-top">
       <div class="inv-ticker">${i.ticker}</div>
       <div class="${gainClass}">${gainSign}${fmt(Math.abs(gain))} (${gainSign}${gainPct}%)</div>
     </div>
     <div class="inv-row-detail">
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Cantidad</span><span class="inv-detail-val">${i.qty}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio compra</span><span class="inv-detail-val">${fmt(i.buyPrice)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio actual</span><span class="inv-detail-val">${fmt(i.curPrice || i.buyPrice)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Invertido (${i.currency||'ARS'})</span><span class="inv-detail-val">${fmt(invested)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual (${i.currency||'ARS'})</span><span class="inv-detail-val">${fmt(current)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Unidades</span><span class="inv-detail-val">${i.qty}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio promedio (${cur})</span><span class="inv-detail-val">${fmt(avgPrice)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio actual (${cur})</span><span class="inv-detail-val">${fmt(curPriceUnit)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Total invertido (${cur})</span><span class="inv-detail-val">${fmt(invested)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual (${cur})</span><span class="inv-detail-val">${fmt(current)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Fecha compra</span><span class="inv-detail-val">${dateStr}</span></div>
     </div>
     ${i.notes ? `<div style="font-size:14px;color:var(--m);margin-top:8px">📝 ${i.notes}</div>` : ''}
     <div class="inv-actions">
-      <button class="btn bg btn-xs" onclick="openUpdatePrice('${i.id}', '${i.ticker}', ${i.curPrice || i.buyPrice})">💱 Actualizar precio</button>
+      <button class="btn bg btn-xs" onclick="openUpdatePrice('${i.id}', '${i.ticker}', ${curPriceUnit})">💱 Actualizar precio</button>
       <button class="btn bg btn-xs" onclick="deleteInvestment('${i.id}')" style="color:var(--r);border-color:var(--rd)">× Eliminar</button>
     </div>
   </div>`;
