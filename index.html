@@ -209,13 +209,18 @@ input::placeholder{color:var(--d)}
     </div>
 
     <div class="view" id="view-compare">
-      <div class="g4">
+      <!-- KPI row -->
+      <div class="g4" style="margin-bottom:20px">
         <div class="card"><div class="clbl">Gastos mes actual</div><div class="cval rd" id="cce">$0</div></div>
         <div class="card"><div class="clbl">Gastos mes anterior</div><div class="cval" id="cpe">$0</div></div>
-        <div class="card"><div class="clbl">Diferencia</div><div class="cval" id="cdf">$0</div><div class="csub" id="cpct">—</div></div>
+        <div class="card"><div class="clbl">Variación</div><div class="cval" id="cdf">$0</div><div class="csub" id="cpct">—</div></div>
         <div class="card"><div class="clbl">Ingresos mes actual</div><div class="cval gn" id="cci">$0</div></div>
       </div>
-      <div class="card"><div class="clbl" style="margin-bottom:16px">Comparación por categoría</div><div id="cmpbars"></div></div>
+      <!-- Visual comparison -->
+      <div class="card">
+        <div style="font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--m);margin-bottom:20px">Comparación por categoría</div>
+        <div id="cmp-visual"></div>
+      </div>
     </div>
 
     <div class="view" id="view-reminders">
@@ -224,53 +229,49 @@ input::placeholder{color:var(--d)}
     </div>
 
     <div class="view" id="view-investments">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+
+      <!-- SECTION: CEDEARs / Acciones -->
+      <div style="display:flex;align-items:center;margin-bottom:14px">
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">📊 CEDEARs y Acciones</div>
         <button class="btn by bsm" id="btnLoadPortfolio">⚡ Cargar mi portfolio</button>
+        <button class="btn bp bsm" id="btnAddStock" style="margin-left:8px">+ Agregar</button>
       </div>
-      <div class="g4" id="inv-summary">
-        <div class="card"><div class="clbl">Total invertido</div><div class="cval" id="inv-total">$0</div><div class="csub">en pesos</div></div>
-        <div class="card ac"><div class="clbl">Valor actual</div><div class="cval" id="inv-current">$0</div><div class="csub">según precio actual</div></div>
+      <div class="g4" style="margin-bottom:16px">
+        <div class="card"><div class="clbl">Invertido (ARS)</div><div class="cval" id="inv-total">$0</div><div class="csub" id="inv-total-usd">USD 0</div></div>
+        <div class="card ac"><div class="clbl">Valor actual (ARS)</div><div class="cval" id="inv-current">$0</div><div class="csub" id="inv-current-usd">USD 0</div></div>
         <div class="card"><div class="clbl">Ganancia / Pérdida</div><div class="cval" id="inv-gain">$0</div><div class="csub" id="inv-gain-pct">—</div></div>
-        <div class="card"><div class="clbl">Posiciones abiertas</div><div class="cval" id="inv-count" style="font-size:30px">0</div><div class="csub">activos</div></div>
+        <div class="card"><div class="clbl">Posiciones</div><div class="cval" id="inv-count" style="font-size:30px">0</div><div class="csub">activos</div></div>
       </div>
-      <div class="g2" style="margin-top:0">
+      <div class="card" style="margin-bottom:24px">
+        <div id="inv-stocks"><div class="empty" style="padding:20px;font-size:15px">Sin posiciones aún</div></div>
+      </div>
+
+      <!-- SECTION: Dólares -->
+      <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:14px">💵 Dólares</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
         <div class="card">
-          <div style="display:flex;align-items:center;margin-bottom:16px">
-            <span class="clbl" style="margin-bottom:0;flex:1">📊 Acciones / CEDEARs</span>
-            <button class="btn bp bsm" id="btnAddStock">+ Agregar</button>
-          </div>
-          <div id="inv-stocks"></div>
+          <div class="clbl">🏦 Caja de ahorro</div>
+          <div class="cval ac" id="usd-bank">USD 0</div>
+          <div class="csub" id="usd-bank-ars">= $0</div>
+          <button class="btn bg bsm" id="btnEditBank" style="margin-top:12px;width:100%">✏️ Editar</button>
         </div>
         <div class="card">
-          <div style="display:flex;align-items:center;margin-bottom:16px">
-            <span class="clbl" style="margin-bottom:0;flex:1">💵 Dólares</span>
-            <button class="btn bp bsm" id="btnAddDolar">+ Agregar</button>
+          <div class="clbl">💵 Efectivo</div>
+          <div class="cval ac" id="usd-cash">USD 0</div>
+          <div class="csub" id="usd-cash-ars">= $0</div>
+          <button class="btn bg bsm" id="btnEditCash" style="margin-top:12px;width:100%">✏️ Editar</button>
+        </div>
+        <div class="card gn">
+          <div class="clbl">Total USD</div>
+          <div class="cval" id="usd-total">USD 0</div>
+          <div class="csub" id="usd-total-ars">= $0</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:12px">
+            <input type="number" id="usd-rate" placeholder="Cotización $/USD" min="0" step="1" style="flex:1;padding:6px 8px;font-size:13px">
+            <button class="btn bg bsm" id="btnUpdateRate">OK</button>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-            <div style="background:var(--bg);border:1px solid var(--b);border-radius:var(--rs);padding:12px 14px">
-              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--d);margin-bottom:4px">🏦 Caja de ahorro</div>
-              <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--a)" id="usd-bank">USD 0</div>
-              <div style="font-size:13px;color:var(--m);margin-top:2px" id="usd-bank-ars">= $0</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid var(--b);border-radius:var(--rs);padding:12px 14px">
-              <div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--d);margin-bottom:4px">💵 Efectivo</div>
-              <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--a)" id="usd-cash">USD 0</div>
-              <div style="font-size:13px;color:var(--m);margin-top:2px" id="usd-cash-ars">= $0</div>
-            </div>
-          </div>
-          <div style="background:var(--gd);border:1px solid var(--g);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <span style="font-size:14px;color:var(--g)">Total USD</span>
-            <span style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--g)" id="usd-total">USD 0</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-            <span style="font-size:13px;color:var(--m)">Tipo de cambio:</span>
-            <input type="number" id="usd-rate" placeholder="ej: 1250" min="0" step="1" style="width:120px;padding:6px 10px;font-size:14px">
-            <span style="font-size:13px;color:var(--m)">$/USD</span>
-            <button class="btn bg bsm" id="btnUpdateRate">Actualizar</button>
-          </div>
-          <div id="inv-dolares"></div>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -307,6 +308,21 @@ input::placeholder{color:var(--d)}
 </div>
 
 <!-- STOCK MODAL -->
+<!-- USD EDIT MODAL -->
+<div class="ov" id="ov-usd">
+  <div class="modal">
+    <div class="mtit" id="ov-usd-title">Editar dólares <button class="xb" id="btnCloseUsd">×</button></div>
+    <div class="fg" style="margin-bottom:20px">
+      <label class="flbl">Monto en USD</label>
+      <input type="number" id="usd-edit-amount" placeholder="ej: 500" min="0" step="0.01">
+    </div>
+    <div class="fact">
+      <button class="btn bg" id="btnCancelUsd">Cancelar</button>
+      <button class="btn bp" id="btnSaveUsd">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="ov" id="ov-stock">
   <div class="modal">
     <div class="mtit">Agregar posición <button class="xb" id="btnCloseStock">×</button></div>
@@ -466,9 +482,12 @@ function initApp(){
     renderRems();
   });
   listenInvestments();
-  listenUSD();
 
   // Wire investment buttons here — after login so uid is set
+  document.getElementById('texp').onclick = ()=>setType('expense');
+  document.getElementById('tinc').onclick = ()=>setType('income');
+  document.getElementById('btnClear').onclick = clearForm;
+  document.getElementById('btnSave').onclick = saveTx;
   document.getElementById('btnAddStock').onclick = ()=>openAddInvestment('stock');
   document.getElementById('btnAddDolar').onclick = ()=>openAddInvestment('dolar');
   document.getElementById('btnCloseStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
@@ -478,6 +497,11 @@ function initApp(){
   document.getElementById('btnCancelUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
   document.getElementById('btnConfirmUpdatePrice').onclick = confirmUpdatePrice;
   document.getElementById('btnLoadPortfolio').onclick = loadPortfolio;
+  document.getElementById('btnEditBank').onclick = ()=>openEditUsd('bank');
+  document.getElementById('btnEditCash').onclick = ()=>openEditUsd('cash');
+  document.getElementById('btnSaveUsd').onclick = saveUsd;
+  document.getElementById('btnCancelUsd').onclick = ()=>document.getElementById('ov-usd').classList.remove('on');
+  document.getElementById('btnUpdateRate').onclick = saveUsdRate;
 }
 
 // ── RENDER ──
@@ -544,6 +568,7 @@ window.delTx=id=>{remove(ref(db,txPath()+'/'+id));toast('Transacción eliminada'
 
 function renderCompare(){
   let pm=curMonth-1,py=curYear; if(pm<0){pm=11;py--;}
+  const MES_SHORT=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const cur=curTxs(),prv=forMonth(txs,pm,py);
   const sE=t=>t.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
   const sI=t=>t.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
@@ -553,24 +578,57 @@ function renderCompare(){
   const de=document.getElementById('cdf');
   de.textContent=(df>=0?'+':'−')+fmt(Math.abs(df));
   de.style.color=df<=0?'var(--g)':'var(--r)';
-  document.getElementById('cpct').textContent=pE>0?((df/pE)*100).toFixed(1)+'% vs mes anterior':'sin datos anteriores';
+  document.getElementById('cpct').textContent=pE>0?((df/pE)*100).toFixed(1)+'% vs '+MES_SHORT[pm]:'sin datos anteriores';
   document.getElementById('cci').textContent=fmt(sI(cur));
+
   const cM={},pM={};
   cur.filter(t=>t.type==='expense').forEach(t=>{cM[t.cat]=(cM[t.cat]||0)+t.amount;});
   prv.filter(t=>t.type==='expense').forEach(t=>{pM[t.cat]=(pM[t.cat]||0)+t.amount;});
-  const cats=[...new Set([...Object.keys(cM),...Object.keys(pM)])];
-  const mx=Math.max(...cats.map(c=>Math.max(cM[c]||0,pM[c]||0)),1);
-  document.getElementById('cmpbars').innerHTML=cats.map((cat,i)=>{
-    const c=cM[cat]||0,p=pM[cat]||0,col=COL[i%COL.length];
-    return `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:15px;margin-bottom:5px">
-        <span>${cat}</span><span style="color:var(--m)">${fmt(p)} → <strong style="color:${c>p?'var(--r)':'var(--g)'}">${fmt(c)}</strong></span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--d);width:28px">ant.</span><div class="btrack" style="flex:1"><div class="bfill" style="width:${(p/mx*100).toFixed(1)}%;background:var(--d)"></div></div></div>
-        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--d);width:28px">act.</span><div class="btrack" style="flex:1"><div class="bfill" style="width:${(c/mx*100).toFixed(1)}%;background:${col}"></div></div></div>
-      </div></div>`;
-  }).join('');
+  const cats=[...new Set([...Object.keys(cM),...Object.keys(pM)])].sort((a,b)=>(cM[b]||0)-(cM[a]||0));
+  const maxVal=Math.max(...cats.map(c=>Math.max(cM[c]||0,pM[c]||0)),1);
+  const mesAct=MES_SHORT[curMonth], mesAnt=MES_SHORT[pm];
+
+  document.getElementById('cmp-visual').innerHTML = `
+    <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:0;align-items:center;margin-bottom:8px">
+      <div></div>
+      <div style="text-align:center;font-size:12px;font-weight:600;color:var(--d);text-transform:uppercase;letter-spacing:.6px;padding-bottom:6px;border-bottom:1px solid var(--b)">${mesAnt}</div>
+      <div style="text-align:center;font-size:12px;font-weight:600;color:var(--a);text-transform:uppercase;letter-spacing:.6px;padding-bottom:6px;border-bottom:1px solid var(--b)">${mesAct}</div>
+    </div>
+    ${cats.map((cat,i)=>{
+      const c=cM[cat]||0,p=pM[cat]||0;
+      const diff=c-p;
+      const pct=p>0?((diff/p)*100).toFixed(0):c>0?'+100':0;
+      const arrow=diff>0?'↑':diff<0?'↓':'→';
+      const arrowColor=diff>0?'var(--r)':diff<0?'var(--g)':'var(--d)';
+      const col=COL[i%COL.length];
+      const barP=(p/maxVal*100).toFixed(1);
+      const barC=(c/maxVal*100).toFixed(1);
+      return `<div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:0;align-items:center;padding:10px 0;border-bottom:1px solid var(--b)">
+        <div style="display:flex;align-items:center;gap:8px;padding-right:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+          <span style="font-size:14px;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat}</span>
+        </div>
+        <div style="padding:0 10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${barP}%;background:var(--d);border-radius:4px;transition:width .5s"></div>
+            </div>
+            <span style="font-size:13px;color:var(--m);min-width:72px;text-align:right">${p>0?fmt(p):'—'}</span>
+          </div>
+        </div>
+        <div style="padding:0 10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${barC}%;background:${col};border-radius:4px;transition:width .5s"></div>
+            </div>
+            <span style="font-size:13px;font-weight:600;min-width:72px;text-align:right" style="color:${col}">${c>0?fmt(c):'—'}</span>
+            <span style="font-size:18px;color:${arrowColor};min-width:20px" title="${diff>=0?'+':''}${pct}%">${arrow}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+    ${cats.length===0?'<div class="empty" style="padding:32px">Sin datos para comparar este mes</div>':''}
+  `;
 }
 
 function renderRems(){
@@ -728,11 +786,13 @@ function toast(msg,err=false){
 }
 // ── INVESTMENTS ──
 const invPath = () => `users/${uid}/investments`;
+const usdPath = () => `users/${uid}/usd`;
 let investments = [];
 let currentEditId = null;
+let usdRate = 0;
+let editingUsdField = null;
 
 // ── USD HOLDINGS ──
-const usdPath = () => `users/${uid}/usd`;
 let usdData = { bank: 0, cash: 0, rate: 1200 };
 
 function listenUSD() {
@@ -764,6 +824,52 @@ function listenInvestments() {
     investments = snapToArray(snap);
     renderInvestments();
   });
+  onValue(ref(db, usdPath()), snap => {
+    if (snap.exists()) {
+      const v = snap.val();
+      usdData = {bank: v.bank||0, cash: v.cash||0};
+      usdRate = v.rate||0;
+      if (document.getElementById('usd-rate')) document.getElementById('usd-rate').value = usdRate||'';
+    }
+    renderUsd();
+  });
+}
+
+function renderUsd() {
+  const rate = parseFloat(document.getElementById('usd-rate')?.value)||usdRate||0;
+  const bank = usdData.bank||0, cash = usdData.cash||0, total = bank+cash;
+  const fmtUsd = n => 'USD '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('usd-bank').textContent = fmtUsd(bank);
+  document.getElementById('usd-cash').textContent = fmtUsd(cash);
+  document.getElementById('usd-total').textContent = fmtUsd(total);
+  document.getElementById('usd-bank-ars').textContent = rate ? '= '+fmt(bank*rate) : '— (ingresá cotización)';
+  document.getElementById('usd-cash-ars').textContent = rate ? '= '+fmt(cash*rate) : '—';
+  document.getElementById('usd-total-ars').textContent = rate ? '= '+fmt(total*rate) : '—';
+}
+
+function openEditUsd(field) {
+  editingUsdField = field;
+  document.getElementById('ov-usd-title').innerHTML = (field==='bank'?'🏦 Caja de ahorro':'💵 Efectivo') + ' <button class="xb" id="btnCloseUsd">×</button>';
+  document.getElementById('usd-edit-amount').value = field==='bank' ? usdData.bank : usdData.cash;
+  document.getElementById('ov-usd').classList.add('on');
+  document.getElementById('btnCloseUsd').onclick = ()=>document.getElementById('ov-usd').classList.remove('on');
+}
+
+function saveUsd() {
+  const amount = parseFloat(document.getElementById('usd-edit-amount').value)||0;
+  if (editingUsdField==='bank') usdData.bank = amount;
+  else usdData.cash = amount;
+  set(ref(db, usdPath()), {...usdData, rate: usdRate});
+  document.getElementById('ov-usd').classList.remove('on');
+  toast('✓ USD actualizado');
+}
+
+function saveUsdRate() {
+  const rate = parseFloat(document.getElementById('usd-rate').value)||0;
+  usdRate = rate;
+  set(ref(db, usdPath()), {...usdData, rate});
+  renderUsd();
+  toast('✓ Cotización actualizada');
 }
 
 function renderInvestments() {
@@ -872,21 +978,6 @@ function confirmUpdatePrice() {
 
 window.openUpdatePrice = openUpdatePrice;
 window.deleteInvestment = id => { remove(ref(db, invPath() + '/' + id)); toast('Inversión eliminada'); };
-
-// ── USD SUMMARY ──
-window.renderUsdSummary = function() {
-  const rate = parseFloat(document.getElementById('usd-rate').value) || 0;
-  const dolares = investments.filter(i => i.type === 'dolar');
-  let bank = 0, cash = 0;
-  dolares.forEach(i => {
-    if (i.ticker && i.ticker.toLowerCase().includes('caja')) bank += i.qty;
-    else cash += i.qty;
-  });
-  document.getElementById('usd-bank').textContent = 'USD ' + bank.toLocaleString('es-AR');
-  document.getElementById('usd-cash').textContent = 'USD ' + cash.toLocaleString('es-AR');
-  const totalUsd = bank + cash;
-  document.getElementById('usd-total-ars').textContent = rate > 0 ? fmt(totalUsd * rate) : '—';
-};
 
 // ── EXPORT TO EXCEL ──
 function exportToExcel() {
