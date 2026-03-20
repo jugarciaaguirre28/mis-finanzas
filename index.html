@@ -233,8 +233,8 @@ input::placeholder{color:var(--d)}
       <!-- SECTION: CEDEARs / Acciones -->
       <div style="display:flex;align-items:center;margin-bottom:14px">
         <div style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">📊 CEDEARs y Acciones</div>
-        <button class="btn by bsm" id="btnLoadPortfolio">⚡ Cargar mi portfolio</button>
-        <button class="btn bp bsm" id="btnAddStock" style="margin-left:8px">+ Agregar</button>
+        <button class="btn by bsm" onclick="loadPortfolio()">⚡ Cargar mi portfolio</button>
+        <button class="btn bp bsm" style="margin-left:8px" onclick="openAddInvestment('stock')">+ Agregar</button>
       </div>
       <div class="g4" style="margin-bottom:16px">
         <div class="card"><div class="clbl">Invertido (ARS)</div><div class="cval" id="inv-total">$0</div><div class="csub" id="inv-total-usd">USD 0</div></div>
@@ -325,21 +325,27 @@ input::placeholder{color:var(--d)}
 
 <div class="ov" id="ov-stock">
   <div class="modal">
-    <div class="mtit">Agregar posición <button class="xb" id="btnCloseStock">×</button></div>
+    <div class="mtit">Agregar posición <button class="xb" onclick="document.getElementById('ov-stock').classList.remove('on')">×</button></div>
     <div class="fgrid">
       <div class="fg"><label class="flbl">Tipo</label>
         <select id="inv-type"><option value="stock">Acción / CEDEAR</option><option value="dolar">Dólar</option></select>
       </div>
       <div class="fg"><label class="flbl">Ticker / Nombre</label><input type="text" id="inv-ticker" placeholder="ej: GGAL, CEDEAR AAPL, USD MEP"></div>
       <div class="fg"><label class="flbl">Cantidad</label><input type="number" id="inv-qty" placeholder="ej: 100" min="0" step="any"></div>
-      <div class="fg"><label class="flbl">Precio de compra ($)</label><input type="number" id="inv-buy-price" placeholder="ej: 1500.00" min="0" step="any"></div>
-      <div class="fg"><label class="flbl">Precio actual ($)</label><input type="number" id="inv-cur-price" placeholder="ej: 1800.00" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Moneda</label>
+        <select id="inv-currency">
+          <option value="ARS">$ Pesos argentinos (ARS)</option>
+          <option value="USD">USD Dólares</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Precio de compra</label><input type="number" id="inv-buy-price" placeholder="ej: 48680 ARS o 50 USD" min="0" step="any"></div>
+      <div class="fg"><label class="flbl">Precio actual</label><input type="number" id="inv-cur-price" placeholder="mismo que compra si no sabés" min="0" step="any"></div>
       <div class="fg"><label class="flbl">Fecha de compra</label><input type="date" id="inv-date"></div>
       <div class="fg full"><label class="flbl">Notas (opcional)</label><input type="text" id="inv-notes" placeholder="ej: Compré en caída, largo plazo"></div>
     </div>
     <div class="fact">
-      <button class="btn bg" id="btnCancelStock">Cancelar</button>
-      <button class="btn bp" id="btnSaveStock">Guardar</button>
+      <button class="btn bg" onclick="document.getElementById('ov-stock').classList.remove('on')">Cancelar</button>
+      <button class="btn bp" onclick="saveInvestment()">Guardar</button>
     </div>
   </div>
 </div>
@@ -347,15 +353,15 @@ input::placeholder{color:var(--d)}
 <!-- UPDATE PRICE MODAL -->
 <div class="ov" id="ov-update-price">
   <div class="modal">
-    <div class="mtit">Actualizar precio <button class="xb" id="btnCloseUpdatePrice">×</button></div>
+    <div class="mtit">Actualizar precio <button class="xb" onclick="document.getElementById('ov-update-price').classList.remove('on')">×</button></div>
     <p style="color:var(--m);font-size:16px;margin-bottom:20px" id="update-price-desc"></p>
     <div class="fg" style="margin-bottom:20px">
       <label class="flbl">Precio actual ($)</label>
       <input type="number" id="new-price" placeholder="ej: 1800.00" min="0" step="any">
     </div>
     <div class="fact">
-      <button class="btn bg" id="btnCancelUpdatePrice">Cancelar</button>
-      <button class="btn bp" id="btnConfirmUpdatePrice">Actualizar</button>
+      <button class="btn bg" onclick="document.getElementById('ov-update-price').classList.remove('on')">Cancelar</button>
+      <button class="btn bp" onclick="confirmUpdatePrice()">Actualizar</button>
     </div>
   </div>
 </div>
@@ -522,20 +528,7 @@ function initApp(){
   document.getElementById('btnCloseRem').onclick = ()=>document.getElementById('ov-rem').classList.remove('on');
   document.getElementById('btnSaveRem').onclick = saveRem;
   // Investment modal
-  document.getElementById('btnAddStock').onclick = ()=>openAddInvestment('stock');
-  document.getElementById('btnAddDolar').onclick = ()=>openAddInvestment('dolar');
-  document.getElementById('btnCloseStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
-  document.getElementById('btnCancelStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
-  document.getElementById('btnSaveStock').onclick = saveInvestment;
-  document.getElementById('btnCloseUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
-  document.getElementById('btnCancelUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
-  document.getElementById('btnConfirmUpdatePrice').onclick = confirmUpdatePrice;
-  document.getElementById('btnLoadPortfolio').onclick = loadPortfolio;
   // USD modal
-  // USD edit buttons wired via window functions (called from dynamic HTML)
-  window.openEditUsd = openEditUsd;
-  window.saveUsdRate = saveUsdRate;
-  // USD buttons use window.* functions via onclick in HTML
 }
 
 function showViewById(name) {
@@ -945,8 +938,8 @@ function invRowHTML(i) {
       <div class="inv-detail-item"><span class="inv-detail-lbl">Cantidad</span><span class="inv-detail-val">${i.qty}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Precio compra</span><span class="inv-detail-val">${fmt(i.buyPrice)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Precio actual</span><span class="inv-detail-val">${fmt(i.curPrice || i.buyPrice)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Invertido</span><span class="inv-detail-val">${fmt(invested)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual</span><span class="inv-detail-val">${fmt(current)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Invertido (${i.currency||'ARS'})</span><span class="inv-detail-val">${fmt(invested)}</span></div>
+      <div class="inv-detail-item"><span class="inv-detail-lbl">Valor actual (${i.currency||'ARS'})</span><span class="inv-detail-val">${fmt(current)}</span></div>
       <div class="inv-detail-item"><span class="inv-detail-lbl">Fecha compra</span><span class="inv-detail-val">${dateStr}</span></div>
     </div>
     ${i.notes ? `<div style="font-size:14px;color:var(--m);margin-top:8px">📝 ${i.notes}</div>` : ''}
@@ -972,12 +965,13 @@ function saveInvestment() {
   const type     = document.getElementById('inv-type').value;
   const ticker   = document.getElementById('inv-ticker').value.trim().toUpperCase();
   const qty      = parseFloat(document.getElementById('inv-qty').value);
+  const currency = document.getElementById('inv-currency').value;
   const buyPrice = parseFloat(document.getElementById('inv-buy-price').value);
   const curPrice = parseFloat(document.getElementById('inv-cur-price').value) || buyPrice;
   const date     = document.getElementById('inv-date').value;
   const notes    = document.getElementById('inv-notes').value.trim();
   if (!ticker || !qty || !buyPrice || !date) { toast('Completá los campos requeridos', true); return; }
-  push(ref(db, invPath()), { type, ticker, qty, buyPrice, curPrice, date, notes });
+  push(ref(db, invPath()), { type, ticker, qty, buyPrice, curPrice, currency, date, notes });
   document.getElementById('ov-stock').classList.remove('on');
   toast('✓ Inversión guardada');
 }
@@ -1000,6 +994,13 @@ function confirmUpdatePrice() {
 
 window.openUpdatePrice = openUpdatePrice;
 window.deleteInvestment = id => { remove(ref(db, invPath() + '/' + id)); toast('Inversión eliminada'); };
+window.openAddInvestment = openAddInvestment;
+window.saveInvestment = saveInvestment;
+window.openEditUsd = openEditUsd;
+window.saveUsd = saveUsd;
+window.saveUsdRate = saveUsdRate;
+window.loadPortfolio = loadPortfolio;
+window.confirmUpdatePrice = confirmUpdatePrice;
 
 // ── EXPORT TO EXCEL ──
 function exportToExcel() {
