@@ -484,10 +484,43 @@ function initApp(){
   listenInvestments();
 
   // Wire investment buttons here — after login so uid is set
+  // ── ALL BUTTON WIRING ──
+  // Tabs
+  document.querySelectorAll('.tab[data-view]').forEach(tab=>{
+    tab.onclick = ()=>{
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+      document.getElementById('view-'+tab.dataset.view).classList.add('on');
+      tab.classList.add('on');
+      renderAll();
+    };
+  });
+  // Topbar
+  document.getElementById('btnPrev').onclick = ()=>chMonth(-1);
+  document.getElementById('btnNext').onclick = ()=>chMonth(1);
+  document.getElementById('btnImport').onclick = ()=>document.getElementById('ov-import').classList.add('on');
+  document.getElementById('btnAddGasto').onclick = ()=>{ showViewById('add'); };
+  document.getElementById('av').onclick = doLogout;
+  document.getElementById('btnExport').onclick = exportToExcel;
+  // Search/filter
+  document.getElementById('srch').oninput = renderTx;
+  document.getElementById('fcat').onchange = renderTx;
+  document.getElementById('ftype').onchange = renderTx;
+  // Add form
   document.getElementById('texp').onclick = ()=>setType('expense');
   document.getElementById('tinc').onclick = ()=>setType('income');
   document.getElementById('btnClear').onclick = clearForm;
   document.getElementById('btnSave').onclick = saveTx;
+  // Import modal
+  document.getElementById('btnCloseImport').onclick = ()=>document.getElementById('ov-import').classList.remove('on');
+  document.getElementById('btnMarzo').onclick = loadMarzo;
+  document.getElementById('btnDoImport').onclick = doImport;
+  // Reminder modal
+  document.getElementById('btnAddRem1').onclick = ()=>document.getElementById('ov-rem').classList.add('on');
+  document.getElementById('btnAddRem2').onclick = ()=>document.getElementById('ov-rem').classList.add('on');
+  document.getElementById('btnCloseRem').onclick = ()=>document.getElementById('ov-rem').classList.remove('on');
+  document.getElementById('btnSaveRem').onclick = saveRem;
+  // Investment modal
   document.getElementById('btnAddStock').onclick = ()=>openAddInvestment('stock');
   document.getElementById('btnAddDolar').onclick = ()=>openAddInvestment('dolar');
   document.getElementById('btnCloseStock').onclick = ()=>document.getElementById('ov-stock').classList.remove('on');
@@ -497,11 +530,21 @@ function initApp(){
   document.getElementById('btnCancelUpdatePrice').onclick = ()=>document.getElementById('ov-update-price').classList.remove('on');
   document.getElementById('btnConfirmUpdatePrice').onclick = confirmUpdatePrice;
   document.getElementById('btnLoadPortfolio').onclick = loadPortfolio;
+  // USD modal
   document.getElementById('btnEditBank').onclick = ()=>openEditUsd('bank');
   document.getElementById('btnEditCash').onclick = ()=>openEditUsd('cash');
   document.getElementById('btnSaveUsd').onclick = saveUsd;
   document.getElementById('btnCancelUsd').onclick = ()=>document.getElementById('ov-usd').classList.remove('on');
   document.getElementById('btnUpdateRate').onclick = saveUsdRate;
+}
+
+function showViewById(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('view-'+name).classList.add('on');
+  const tab = document.querySelector('.tab[data-view="'+name+'"]');
+  if (tab) tab.classList.add('on');
+  renderAll();
 }
 
 // ── RENDER ──
@@ -802,37 +845,12 @@ function listenUSD() {
   });
 }
 
-function renderUSD() {
-  const { bank, cash, rate } = usdData;
-  const total = bank + cash;
-  document.getElementById('usd-bank').textContent = 'USD ' + bank.toLocaleString('es-AR');
-  document.getElementById('usd-cash').textContent = 'USD ' + cash.toLocaleString('es-AR');
-  document.getElementById('usd-total').textContent = 'USD ' + total.toLocaleString('es-AR');
-  document.getElementById('usd-bank-ars').textContent = '= ' + fmt(bank * rate);
-  document.getElementById('usd-cash-ars').textContent = '= ' + fmt(cash * rate);
-  document.getElementById('usd-rate').value = rate;
-}
-
-function saveUSD(field, value) {
-  usdData[field] = value;
-  set(ref(db, usdPath()), usdData);
-  renderUSD();
-}
-
 function listenInvestments() {
   onValue(ref(db, invPath()), snap => {
     investments = snapToArray(snap);
     renderInvestments();
   });
-  onValue(ref(db, usdPath()), snap => {
-    if (snap.exists()) {
-      const v = snap.val();
-      usdData = {bank: v.bank||0, cash: v.cash||0};
-      usdRate = v.rate||0;
-      if (document.getElementById('usd-rate')) document.getElementById('usd-rate').value = usdRate||'';
-    }
-    renderUsd();
-  });
+
 }
 
 function renderUsd() {
@@ -1012,73 +1030,8 @@ async function loadPortfolio() {
 }
 
 // ── EVENT LISTENERS ──
-document.querySelectorAll('.tab[data-view]').forEach(tab=>{
-  tab.addEventListener('click', ()=>{
-    const name = tab.dataset.view;
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-    document.getElementById('view-'+name).classList.add('on');
-    tab.classList.add('on');
-    renderAll();
-  });
-});
-document.getElementById('btnPrev').addEventListener('click', ()=>chMonth(-1));
-document.getElementById('btnNext').addEventListener('click', ()=>chMonth(1));
-document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('ov-import').classList.add('on'));
-document.getElementById('btnAddGasto').addEventListener('click', ()=>{
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById('view-add').classList.add('on');
-  document.querySelector('.tab[data-view="add"]').classList.add('on');
-});
-document.getElementById('btnAddRem1').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
-document.getElementById('btnAddRem2').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
-document.getElementById('btnClear').addEventListener('click', clearForm);
-document.getElementById('btnSave').addEventListener('click', saveTx);
-document.getElementById('texp').addEventListener('click', ()=>setType('expense'));
-document.getElementById('tinc').addEventListener('click', ()=>setType('income'));
-document.getElementById('srch').addEventListener('input', renderTx);
-document.getElementById('fcat').addEventListener('change', renderTx);
-document.getElementById('ftype').addEventListener('change', renderTx);
-document.getElementById('btnCloseImport').addEventListener('click', ()=>document.getElementById('ov-import').classList.remove('on'));
-document.getElementById('btnMarzo').addEventListener('click', loadMarzo);
-document.getElementById('btnDoImport').addEventListener('click', doImport);
-document.getElementById('btnCloseRem').addEventListener('click', ()=>document.getElementById('ov-rem').classList.remove('on'));
-document.getElementById('btnSaveRem').addEventListener('click', saveRem);
-document.getElementById('av').addEventListener('click', doLogout);
 
-// USD listeners
-document.getElementById('btnUpdateRate').addEventListener('click', () => {
-  const rate = parseFloat(document.getElementById('usd-rate').value);
-  if (!rate) { toast('Ingresá un tipo de cambio válido', true); return; }
-  saveUSD('rate', rate);
-  toast('✓ Tipo de cambio actualizado');
-});
 
-// USD inline editing — click on the values to edit them
-document.getElementById('usd-bank').addEventListener('click', () => {
-  const val = prompt('Dólares en caja de ahorro (USD):', usdData.bank);
-  if (val !== null && !isNaN(parseFloat(val))) { saveUSD('bank', parseFloat(val)); toast('✓ Caja de ahorro actualizada'); }
-});
-document.getElementById('usd-cash').addEventListener('click', () => {
-  const val = prompt('Dólares en efectivo (USD):', usdData.cash);
-  if (val !== null && !isNaN(parseFloat(val))) { saveUSD('cash', parseFloat(val)); toast('✓ Efectivo actualizado'); }
-});
-
-document.getElementById('btnExport').addEventListener('click', exportToExcel);
-
-// Investment buttons
-document.getElementById('btnAddStock').addEventListener('click', ()=>openAddInvestment('stock'));
-document.getElementById('btnAddDolar').addEventListener('click', ()=>openAddInvestment('dolar'));
-document.getElementById('btnCloseStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
-document.getElementById('btnCancelStock').addEventListener('click', ()=>document.getElementById('ov-stock').classList.remove('on'));
-document.getElementById('btnSaveStock').addEventListener('click', saveInvestment);
-document.getElementById('btnCloseUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
-document.getElementById('btnCancelUpdatePrice').addEventListener('click', ()=>document.getElementById('ov-update-price').classList.remove('on'));
-document.getElementById('btnConfirmUpdatePrice').addEventListener('click', confirmUpdatePrice);
-document.getElementById('btnLoadPortfolio').addEventListener('click', loadPortfolio);
-document.getElementById('btnAddRem1').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
-document.getElementById('btnAddRem2').addEventListener('click', ()=>document.getElementById('ov-rem').classList.add('on'));
 </script>
 </body>
 </html>
