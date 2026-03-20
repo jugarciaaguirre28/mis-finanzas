@@ -1077,16 +1077,12 @@ function renderInvestments() {
         stocks.map(i => {
           const totalInv = i.buyPrice; // buyPrice = total paid
           const pricePerUnitKpi = i.qty > 0 ? totalInv / i.qty : 0;
-          const totalCur = i.qty * (i.curPrice || pricePerUnitKpi);
-          const cur      = i.currency || 'ARS';
-          const gain     = totalCur - totalInv;
-          const gainPct  = totalInv > 0 ? ((gain/totalInv)*100).toFixed(1) : '0.0';
-          const gainColor = gain >= 0 ? 'var(--g)' : 'var(--r)';
-          return '<div class="card">' +
+          const cur = i.currency || 'ARS';
+          return '<div class="card">'  +
             '<div class="clbl">'+i.ticker+'</div>' +
-            '<div style="font-size:22px;font-family:\'DM Serif Display\',serif;margin-bottom:4px">'+i.qty+' unidades</div>' +
-            '<div style="font-size:14px;color:var(--m)">Precio/u: '+fmt(pricePerUnitKpi)+' '+cur+'</div>' +
-            '<div style="font-size:15px;font-weight:600;color:'+gainColor+';margin-top:6px">'+(gain>=0?'+':'−')+fmt(Math.abs(gain))+' ('+(gain>=0?'+':'')+gainPct+'%)</div>' +
+            '<div style="font-size:26px;font-family:DM Serif Display,serif;margin-bottom:6px">'+i.qty+' u</div>' +
+            '<div style="font-size:15px;color:var(--m)">Total: <strong style="color:var(--t)">'+fmt(totalInv)+' '+cur+'</strong></div>' +
+            '<div style="font-size:14px;color:var(--m);margin-top:2px">Precio/u: '+fmt(pricePerUnitKpi)+' '+cur+'</div>' +
             '</div>';
         }).join('') + '</div>';
     }
@@ -1097,18 +1093,18 @@ function renderInvestments() {
   const usdEl = document.getElementById('inv-chart-usd');
   if (arsEl) {
     const arsStocks = stocks.filter(i => (i.currency||'ARS') === 'ARS');
-    const maxArs = Math.max(...arsStocks.map(i => i.qty * i.buyPrice), 1);
+    const maxArs = Math.max(...arsStocks.map(i => i.buyPrice), 1);
     arsEl.innerHTML = arsStocks.length ? arsStocks.map((i,idx) => {
-      const v = i.qty * i.buyPrice;
+      const v = i.buyPrice;
       return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">'+fmt(v)+'</span></div>' +
         '<div class="btrack"><div class="bfill" style="width:'+(v/maxArs*100).toFixed(1)+'%;background:'+COL[idx%COL.length]+'"></div></div></div>';
     }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en ARS</div>';
   }
   if (usdEl) {
     const usdStocks = stocks.filter(i => i.currency === 'USD');
-    const maxUsd = Math.max(...usdStocks.map(i => i.qty * i.buyPrice), 1);
+    const maxUsd = Math.max(...usdStocks.map(i => i.buyPrice), 1);
     usdEl.innerHTML = usdStocks.length ? usdStocks.map((i,idx) => {
-      const v = i.qty * i.buyPrice;
+      const v = i.buyPrice;
       return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">USD '+v.toLocaleString('es-AR',{maximumFractionDigits:2})+'</span></div>' +
         '<div class="btrack"><div class="bfill" style="width:'+(v/maxUsd*100).toFixed(1)+'%;background:'+COL[(idx+3)%COL.length]+'"></div></div></div>';
     }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en USD</div>';
@@ -1124,29 +1120,17 @@ function invRowHTML(i) {
   // buyPrice = total paid, pricePerUnit = buyPrice / qty
   const invested = i.buyPrice;
   const pricePerUnit = i.qty > 0 ? i.buyPrice / i.qty : 0;
-  const curPriceUnit = i.curPrice || pricePerUnit;
-  const current = i.qty * curPriceUnit;
-  const gain     = current - invested;
-  const gainPct  = invested > 0 ? ((gain / invested) * 100).toFixed(1) : '0.0';
-  const gainClass = gain >= 0 ? 'inv-gain-pos' : 'inv-gain-neg';
-  const gainSign  = gain >= 0 ? '+' : '−';
   const d = new Date(i.date + 'T12:00:00');
   const dateStr = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
   const cur = i.currency || 'ARS';
   return `<div class="inv-row">
     <div class="inv-row-top">
       <div class="inv-ticker">${i.ticker}</div>
-      <div class="${gainClass}">${gainSign}${fmt(Math.abs(gain))} (${gainSign}${gainPct}%)</div>
+      <span style="font-size:14px;color:var(--m)">${i.qty} u · ${fmt(pricePerUnit)}/u · Total: ${fmt(invested)} ${cur}</span>
     </div>
-    <div class="inv-row-detail">
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Unidades</span><span class="inv-detail-val">${i.qty}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Precio/u (${cur})</span><span class="inv-detail-val">${fmt(pricePerUnit)}</span></div>
-      <div class="inv-detail-item"><span class="inv-detail-lbl">Fecha compra</span><span class="inv-detail-val">${dateStr}</span></div>
-    </div>
-    ${i.notes ? `<div style="font-size:14px;color:var(--m);margin-top:8px">📝 ${i.notes}</div>` : ''}
+    <div style="font-size:14px;color:var(--m);margin-bottom:8px">Compra: ${dateStr}${i.notes ? ' · ' + i.notes : ''}</div>
     <div class="inv-actions">
       <button class="btn bg btn-xs" onclick="openEditInv('${i.id}')">✏️ Editar</button>
-      <button class="btn bg btn-xs" onclick="openUpdatePrice('${i.id}', '${i.ticker}', ${curPriceUnit})">💱 Actualizar precio</button>
       <button class="btn bg btn-xs" onclick="deleteInvestment('${i.id}')" style="color:var(--r);border-color:var(--rd)">× Eliminar</button>
     </div>
   </div>`;
@@ -1193,7 +1177,6 @@ function confirmUpdatePrice() {
   toast('✓ Precio actualizado');
 }
 
-window.openUpdatePrice = openUpdatePrice;
 window.deleteInvestment = id => { remove(ref(db, invPath() + '/' + id)); toast('Inversión eliminada'); };
 window.openAddInvestment = openAddInvestment;
 window.saveInvestment = saveInvestment;
