@@ -591,7 +591,22 @@ function snapToArray(snap) {
 }
 
 // ── AUTH ──
-document.getElementById('btnLogin').onclick = ()=>signInWithPopup(auth,prov).catch(e=>toast('Error: '+e.message,true));
+document.getElementById('btnLogin').onclick = async () => {
+  try {
+    // Safari en iOS necesita signInWithPopup iniciado por gesto del usuario
+    prov.setCustomParameters({ prompt: 'select_account' });
+    await signInWithPopup(auth, prov);
+  } catch(e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      toast('Popup bloqueado. Intentá de nuevo o revisá que Safari permita popups para este sitio.', true);
+    } else if (e.code === 'auth/cancelled-popup-request') {
+      // Ignorar — el usuario cerró el popup
+    } else {
+      toast('Error: ' + e.message, true);
+      console.error(e);
+    }
+  }
+};
 window.doLogout = ()=>signOut(auth);
 
 onAuthStateChanged(auth, user=>{
