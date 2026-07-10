@@ -353,51 +353,38 @@ input::placeholder{color:var(--d)}
 
     <div class="view" id="view-investments">
 
-      <!-- SECTION: CEDEARs / Acciones -->
-      <div style="display:flex;align-items:center;margin-bottom:16px">
-        <div style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">📊 CEDEARs y Acciones</div>
-        <button class="btn bp bsm" onclick="openAddInvestment('stock')">+ Agregar</button>
-      </div>
-      <div id="inv-kpis" style="margin-bottom:16px"></div>
-      <div class="g2" style="margin-bottom:20px">
-        <div class="card">
-          <div class="clbl" style="margin-bottom:14px">Distribución por instrumento (ARS)</div>
-          <div class="bars" id="inv-chart-ars"></div>
-        </div>
-        <div class="card">
-          <div class="clbl" style="margin-bottom:14px">Distribución por instrumento (USD)</div>
-          <div class="bars" id="inv-chart-usd"></div>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:24px">
-        <div id="inv-stocks"><div class="empty" style="padding:20px;font-size:15px">Sin posiciones aún</div></div>
-      </div>
-
-      <!-- SECTION: Dólares -->
-      <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:14px">💵 Dólares</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+      <!-- USD -->
+      <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:12px">💵 Dólares</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
         <div class="card">
           <div class="clbl">🏦 Caja de ahorro</div>
-          <div class="cval ac" id="usd-bank">USD 0</div>
+          <div class="cval ac" id="usd-bank" style="font-size:20px">USD 0</div>
           <div class="csub" id="usd-bank-ars">= $0</div>
-          <button class="btn bg bsm" style="margin-top:12px;width:100%" onclick="openEditUsd('bank')">✏️ Editar</button>
+          <button class="btn bg bsm" style="margin-top:10px;width:100%" onclick="openEditUsd('bank')">✏️ Editar</button>
         </div>
         <div class="card">
           <div class="clbl">💵 Efectivo</div>
-          <div class="cval ac" id="usd-cash">USD 0</div>
+          <div class="cval ac" id="usd-cash" style="font-size:20px">USD 0</div>
           <div class="csub" id="usd-cash-ars">= $0</div>
-          <button class="btn bg bsm" style="margin-top:12px;width:100%" onclick="openEditUsd('cash')">✏️ Editar</button>
+          <button class="btn bg bsm" style="margin-top:10px;width:100%" onclick="openEditUsd('cash')">✏️ Editar</button>
         </div>
         <div class="card gn">
-          <div class="clbl">Total USD</div>
-          <div class="cval" id="usd-total">USD 0</div>
+          <div class="clbl">Total</div>
+          <div class="cval" id="usd-total" style="font-size:20px">USD 0</div>
           <div class="csub" id="usd-total-ars">= $0</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:12px">
-            <input type="number" id="usd-rate" placeholder="Cotización $/USD" min="0" step="1" style="flex:1;padding:6px 8px;font-size:13px">
+          <div style="display:flex;align-items:center;gap:6px;margin-top:10px">
+            <input type="number" id="usd-rate" placeholder="$/USD" min="0" step="1" style="flex:1;padding:6px 8px;font-size:13px">
             <button class="btn bg bsm" onclick="saveUsdRate()">OK</button>
           </div>
         </div>
       </div>
+
+      <!-- INSTRUMENTOS -->
+      <div style="display:flex;align-items:center;margin-bottom:16px">
+        <div style="font-family:'DM Serif Display',serif;font-size:20px;flex:1">📊 Instrumentos</div>
+        <button class="btn bp bsm" onclick="openAddInvestment('stock')">+ Agregar</button>
+      </div>
+      <div id="inv-tenencias"></div>
 
     </div>
 
@@ -1262,77 +1249,62 @@ function saveUsdRate() {
 }
 
 function renderInvestments() {
+  const el = document.getElementById('inv-tenencias');
+  if (!el) return;
+
   const stocks = investments.filter(i => i.type === 'stock');
-
-  // ── KPIs: one card per instrument ──
-  const kpiEl = document.getElementById('inv-kpis');
-  if (kpiEl) {
-    if (!stocks.length) {
-      kpiEl.innerHTML = '<div class="empty" style="padding:16px;font-size:15px">Sin posiciones aún. Usá + Agregar.</div>';
-    } else {
-      const cols = Math.min(stocks.length, 4);
-      kpiEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:14px">' +
-        stocks.map(i => {
-          const totalInv = i.buyPrice; // buyPrice = total paid
-          const pricePerUnitKpi = i.qty > 0 ? totalInv / i.qty : 0;
-          const cur = i.currency || 'ARS';
-          return '<div class="card">'  +
-            '<div class="clbl">'+i.ticker+'</div>' +
-            '<div style="font-size:26px;font-family:DM Serif Display,serif;margin-bottom:6px">'+i.qty+' u</div>' +
-            '<div style="font-size:15px;color:var(--m)">Total: <strong style="color:var(--t)">'+fmt(totalInv)+' '+cur+'</strong></div>' +
-            '<div style="font-size:14px;color:var(--m);margin-top:2px">Precio/u: '+fmt(pricePerUnitKpi)+' '+cur+'</div>' +
-            '</div>';
-        }).join('') + '</div>';
-    }
+  if (!stocks.length) {
+    el.innerHTML = '<div class="empty">Sin instrumentos aún. Usá + Agregar.</div>';
+    return;
   }
 
-  // ── CHARTS ──
-  const arsEl = document.getElementById('inv-chart-ars');
-  const usdEl = document.getElementById('inv-chart-usd');
-  if (arsEl) {
-    const arsStocks = stocks.filter(i => (i.currency||'ARS') === 'ARS');
-    const maxArs = Math.max(...arsStocks.map(i => i.buyPrice), 1);
-    arsEl.innerHTML = arsStocks.length ? arsStocks.map((i,idx) => {
-      const v = i.buyPrice;
-      return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">'+fmt(v)+'</span></div>' +
-        '<div class="btrack"><div class="bfill" style="width:'+(v/maxArs*100).toFixed(1)+'%;background:'+COL[idx%COL.length]+'"></div></div></div>';
-    }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en ARS</div>';
-  }
-  if (usdEl) {
-    const usdStocks = stocks.filter(i => i.currency === 'USD');
-    const maxUsd = Math.max(...usdStocks.map(i => i.buyPrice), 1);
-    usdEl.innerHTML = usdStocks.length ? usdStocks.map((i,idx) => {
-      const v = i.buyPrice;
-      return '<div class="brow"><div class="btop"><span>'+i.ticker+'</span><span style="color:var(--m)">USD '+v.toLocaleString('es-AR',{maximumFractionDigits:2})+'</span></div>' +
-        '<div class="btrack"><div class="bfill" style="width:'+(v/maxUsd*100).toFixed(1)+'%;background:'+COL[(idx+3)%COL.length]+'"></div></div></div>';
-    }).join('') : '<div style="color:var(--d);font-size:14px;padding:8px 0">Sin posiciones en USD</div>';
-  }
+  // Agrupar por ticker — suma tenencias de múltiples compras
+  const grupos = {};
+  stocks.forEach(i => {
+    const t = i.ticker.toUpperCase();
+    if (!grupos[t]) grupos[t] = { ticker: t, currency: i.currency||'ARS', compras: [] };
+    grupos[t].compras.push(i);
+  });
 
-  // ── TABLE ──
-  document.getElementById('inv-stocks').innerHTML = stocks.length
-    ? stocks.map(i => invRowHTML(i)).join('')
-    : '<div class="empty" style="padding:24px;font-size:15px">Sin posiciones aún</div>';
+  el.innerHTML = Object.values(grupos).map(g => {
+    const totalUnidades = g.compras.reduce((s,c) => s + c.qty, 0);
+    const totalPagado   = g.compras.reduce((s,c) => s + c.buyPrice, 0);
+    const cur = g.currency;
+
+    const comprasHTML = g.compras.map(c => {
+      const d = new Date(c.date + 'T12:00:00');
+      const ds = d.toLocaleDateString('es-AR', {month:'short', year:'numeric'});
+      return `<div style="display:flex;justify-content:space-between;font-size:14px;color:var(--m);padding:6px 0;border-top:1px solid var(--b)">
+        <span>${ds} · ${c.qty} u</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          ${fmt(c.buyPrice)} ${cur}
+          <button onclick="openEditInv('${c.id}')" style="background:none;border:1px solid var(--b);border-radius:4px;color:var(--m);cursor:pointer;padding:2px 6px;font-size:12px">✏️</button>
+          <button onclick="deleteInvestment('${c.id}')" style="background:none;border:none;color:var(--d);cursor:pointer;font-size:14px">×</button>
+        </span>
+      </div>`;
+    }).join('');
+
+    return `<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;margin-bottom:4px">
+        <span style="font-family:'DM Serif Display',serif;font-size:22px;flex:1">${g.ticker}</span>
+        <span style="font-size:14px;color:var(--m)">${cur}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div class="clbl">Tenencia total</div>
+          <div style="font-size:20px;font-weight:600">${totalUnidades} u</div>
+        </div>
+        <div>
+          <div class="clbl">Total invertido</div>
+          <div style="font-size:20px;font-weight:600">${fmt(totalPagado)} ${cur}</div>
+        </div>
+      </div>
+      <div class="clbl" style="margin-bottom:2px">Historial de compras</div>
+      ${comprasHTML}
+    </div>`;
+  }).join('');
 }
 
-function invRowHTML(i) {
-  // buyPrice = total paid, pricePerUnit = buyPrice / qty
-  const invested = i.buyPrice;
-  const pricePerUnit = i.qty > 0 ? i.buyPrice / i.qty : 0;
-  const d = new Date(i.date + 'T12:00:00');
-  const dateStr = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
-  const cur = i.currency || 'ARS';
-  return `<div class="inv-row">
-    <div class="inv-row-top">
-      <div class="inv-ticker">${i.ticker}</div>
-      <span style="font-size:14px;color:var(--m)">${i.qty} u · ${fmt(pricePerUnit)}/u · Total: ${fmt(invested)} ${cur}</span>
-    </div>
-    <div style="font-size:14px;color:var(--m);margin-bottom:8px">Compra: ${dateStr}${i.notes ? ' · ' + i.notes : ''}</div>
-    <div class="inv-actions">
-      <button class="btn bg btn-xs" onclick="openEditInv('${i.id}')">✏️ Editar</button>
-      <button class="btn bg btn-xs" onclick="deleteInvestment('${i.id}')" style="color:var(--r);border-color:var(--rd)">× Eliminar</button>
-    </div>
-  </div>`;
-}
 
 function openAddInvestment(type) {
   document.getElementById('inv-type').value = type;
